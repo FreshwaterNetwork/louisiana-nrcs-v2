@@ -44,6 +44,8 @@ import PortalSource from '@arcgis/core/widgets/BasemapGallery/support/PortalBase
 import BasemapGallery from '@arcgis/core/widgets/BasemapGallery';
 import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
 import ScaleBar from '@arcgis/core/widgets/ScaleBar';
+import Point from '@arcgis/core/geometry/Point.js';
+// import func from 'vue-editor-bridge';
 
 //global in order to have access to the maplayer
 let esri = {
@@ -64,6 +66,14 @@ export default {
   data() {
     return {
       active: true,
+      units: [],
+      unitClick: null,
+      catchID: 0,
+      hucID: 0,
+      laruID: 0,
+      fID: 0,
+      groupedObjects: [],
+      highlighted: [],
     };
   },
   computed: {
@@ -74,6 +84,135 @@ export default {
     supportingVisibleLayerOpacity() {
       //returns object {value: OpacVal, id: Layerid}
       return this.$store.state.supportingVisibleLayerOpacity;
+    },
+    layerSelection() {
+      return this.$store.state.layerSelection;
+    },
+    referenceSelection() {
+      return this.$store.state.referenceSelection;
+    },
+    unitSelection: {
+      get() {
+        return this.$store.state.unitSelection;
+      },
+      set(value) {
+        this.$store.commit('updateUnitSelection', value);
+      },
+    },
+    unitLength: {
+      get() {
+        return this.$store.state.unitLength;
+      },
+      set(value) {
+        this.$store.commit('updateUnitLength', value);
+      },
+    },
+    loadingVis: {
+      get() {
+        return this.$store.state.loadingVis;
+      },
+      set(value) {
+        this.$store.commit('updateLoadingVis', value);
+      },
+    },
+    mngmtVis: {
+      get() {
+        return this.$store.state.mngmtVis;
+      },
+      set(value) {
+        this.$store.commit('updateMngmtVis', value);
+      },
+    },
+    endLoading: {
+      get() {
+        return this.$store.state.endLoading;
+      },
+      set(value) {
+        this.$store.commit('updateEndLoading', value);
+      },
+    },
+    resourceUnits: {
+      get() {
+        return this.$store.state.resourceUnits;
+      },
+      set(value) {
+        this.$store.commit('updateResourceUnits', value);
+      },
+    },
+    hucUnits: {
+      get() {
+        return this.$store.state.hucUnits;
+      },
+      set(value) {
+        this.$store.commit('updateHucUnits', value);
+      },
+    },
+    catchUnits: {
+      get() {
+        return this.$store.state.catchUnits;
+      },
+      set(value) {
+        this.$store.commit('updateCatchUnits', value);
+      },
+    },
+    fieldUnits: {
+      get() {
+        return this.$store.state.fieldUnits;
+      },
+      set(value) {
+        this.$store.commit('updateFieldUnits', value);
+      },
+    },
+    totalNitr: {
+      get() {
+        return this.$store.state.totalNitr;
+      },
+      set(value) {
+        this.$store.commit('updateTotalNitr', value);
+      },
+    },
+    totalPhos: {
+      get() {
+        return this.$store.state.totalPhos;
+      },
+      set(value) {
+        this.$store.commit('updateTotalPhos', value);
+      },
+    },
+    totalSed: {
+      get() {
+        return this.$store.state.totalSed;
+      },
+      set(value) {
+        this.$store.commit('updateTotalSed', value);
+      },
+    },
+    totalCropArea: {
+      get() {
+        return this.$store.state.totalCropArea;
+      },
+      set(value) {
+        this.$store.commit('updateTotalCropArea', value);
+      },
+    },
+    backBtn() {
+      return this.$store.state.backBtn;
+    },
+    count: {
+      get() {
+        return this.$store.state.count;
+      },
+      set(value) {
+        this.$store.commit('updateCount', value);
+      },
+    },
+    unitIndex: {
+      get() {
+        return this.$store.state.unitIndex;
+      },
+      set(value) {
+        this.$store.commit('updateUnitIndex', value);
+      },
     },
   },
   watch: {
@@ -94,10 +233,8 @@ export default {
     //create the map view
     esri.mapView = new MapView({
       map: esri.map,
-      //center: [-70.99501567725498, 42.310350073610834],
-
-      center: [-91.1428856564941, 38.10112862716938],
-      zoom: 9,
+      center: [-92.024476, 31.031655],
+      zoom: 8,
       container: this.$el,
     });
 
@@ -153,6 +290,876 @@ export default {
       });
     });
 
+    esri.mapImage = new MapImageLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer',
+      sublayers: [
+        {
+          id: 0,
+          title: 'Catchments',
+          visible: false,
+          opacity: 0.8,
+        },
+        {
+          id: 1,
+          title: '12-Digit Hydrologic Units',
+          visible: false,
+          opacity: 0.8,
+        },
+        {
+          id: 2,
+          title: 'NRCS Resource Units',
+          visible: false,
+          opacity: 0.8,
+        },
+        {
+          id: 3,
+          title: 'Field Boundaries',
+          visible: false,
+          opacity: 0.8,
+        },
+        {
+          id: 4,
+          title: 'Agricultural Fields',
+          visible: true,
+          opacity: 0.8,
+        },
+        {
+          id: 5,
+          title: 'Poultry Production',
+          visible: false,
+          opacity: 0.8,
+        },
+        {
+          id: 6,
+          title: 'Dairy Production',
+          visible: false,
+          opacity: 0.8,
+        },
+      ],
+    });
+
+    esri.map.add(esri.mapImage);
+
+    // Layers and layerviews
+    const nrcs = new FeatureLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/2',
+      visible: false,
+      opacity: 0.8,
+      outFields: ['LARU'],
+    });
+
+    esri.map.add(nrcs);
+
+    let nrcsLayerView = '';
+    esri.mapView.whenLayerView(nrcs).then(function(layerView) {
+      nrcsLayerView = layerView;
+    });
+
+    //
+
+    const huc = new FeatureLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/1',
+      visible: false,
+      opacity: 0.8,
+
+      outFields: ['HUC_12'],
+    });
+
+    esri.map.add(huc);
+
+    let hucLayerView = '';
+    esri.mapView.whenLayerView(huc).then(function(layerView) {
+      hucLayerView = layerView;
+    });
+
+    const catchments = new FeatureLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/0',
+      visible: false,
+      opacity: 0.8,
+
+      outFields: ['Catchment_ID'],
+    });
+
+    esri.map.add(catchments);
+
+    let catchLayerView = '';
+    esri.mapView.whenLayerView(catchments).then(function(layerView) {
+      catchLayerView = layerView;
+    });
+
+    const field = new FeatureLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/3',
+      visible: false,
+      opacity: 0.8,
+
+      outFields: ['fid'],
+    });
+
+    esri.map.add(field);
+
+    let fieldLayerView = '';
+    esri.mapView.whenLayerView(field).then(function(layerView) {
+      fieldLayerView = layerView;
+    });
+
+    // Tables
+    const table1 = new FeatureLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/7',
+      outFields: [
+        'CropName',
+        'CropArea_acres',
+        'orig_nit_load',
+        'orig_phos_load',
+        'orig_sed_load',
+      ],
+    });
+
+    const table2 = new FeatureLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/8',
+      outFields: [
+        'CropName',
+        'CropArea_acres',
+        'orig_nit_load',
+        'orig_phos_load',
+        'orig_sed_load',
+      ],
+    });
+
+    const table3 = new FeatureLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/9',
+      outFields: [
+        'CropName',
+        'CropArea_acres',
+        'orig_nit_load',
+        'orig_phos_load',
+        'orig_sed_load',
+      ],
+    });
+
+    const table4 = new FeatureLayer({
+      url:
+        'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/10',
+      outFields: [
+        'CropName',
+        'CropArea_acres',
+        'orig_nit_load',
+        'orig_phos_load',
+        'orig_sed_load',
+      ],
+    });
+
+    console.log(table1, table2, table3, table4);
+
+    // Reference layer selection logic
+    this.$watch('referenceSelection', () => {
+      console.log('reference layer changed');
+      esri.mapImage.sublayers.forEach((sub) => {
+        console.log(sub.id);
+        if (sub.id === 4 || sub.id === 5 || sub.id === 6) {
+          console.log(sub);
+          let layerTitle = sub.title;
+          console.log(this.referenceSelection);
+
+          if (this.referenceSelection === layerTitle) {
+            sub.visible = true;
+            console.log(sub);
+          } else if (this.referenceSelection !== layerTitle) {
+            sub.visible = false;
+          }
+        }
+      });
+    });
+
+    let laySelect;
+
+    // Scale layer selection logic
+    this.$watch('layerSelection', () => {
+      if (highlightUnit) {
+        highlightUnit.remove();
+      }
+
+      this.units.forEach((unit) => {
+        this.units.splice(unit);
+      });
+
+      this.unitSelection = [];
+
+      if (this.layerSelection === 'NRCS Resource Units') {
+        nrcs.visible = true;
+        huc.visible = false;
+        catchments.visible = false;
+        field.visible = false;
+      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+        huc.visible = true;
+        nrcs.visible = false;
+        catchments.visible = false;
+        field.visible = false;
+      } else if (this.layerSelection === 'Catchments') {
+        catchments.visible = true;
+        huc.visible = false;
+        field.visible = false;
+        nrcs.visible = false;
+      } else if (this.layerSelection === 'Field Boundaries') {
+        field.visible = true;
+        nrcs.visible = false;
+        huc.visible = false;
+        catchments.visible = false;
+      }
+
+      laySelect = this.layerSelection;
+
+      console.log(this.layerSelection);
+    });
+
+    let _this = this;
+    let highlightUnit;
+
+    // Click event listener to build selected units list and crop lists
+    this.unitClick = esri.mapView.on('click', function(response) {
+      if (_this.mngmtVis == false) {
+        let point = new Point({
+          x: response.mapPoint.longitude,
+          y: response.mapPoint.latitude,
+        });
+
+        if (laySelect === 'NRCS Resource Units') {
+          const queryNRCS = nrcs.createQuery(point);
+          queryNRCS.geometry = point;
+          queryNRCS.outFields = ['*'];
+
+          nrcs.queryFeatures(queryNRCS).then(function(result) {
+            let feature = result.features[0];
+            _this.laruID = feature.attributes.LARU;
+
+            if (_this.units.includes(_this.laruID) == false) {
+              _this.units.push(_this.laruID);
+
+              _this.highlighted.push([
+                feature.attributes['OBJECTID'],
+                _this.laruID,
+              ]);
+
+              console.log(_this.units);
+            }
+
+            _this.unitLength = _this.units.length;
+
+            highlightUnit = nrcsLayerView.highlight(
+              feature.attributes['OBJECTID']
+            );
+          });
+        } else if (laySelect === '12-Digit Hydrologic Units') {
+          const queryHuc = huc.createQuery(point);
+          queryHuc.geometry = point;
+          queryHuc.outFields = ['*'];
+
+          huc.queryFeatures(queryHuc).then(function(result) {
+            let feature = result.features[0];
+            _this.hucID = feature.attributes.HUC_12;
+
+            if (_this.units.includes(_this.hucID) == false) {
+              _this.units.push(_this.hucID);
+
+              _this.highlighted.push([
+                feature.attributes['OBJECTID'],
+                _this.hucID,
+              ]);
+            }
+
+            _this.unitLength = _this.units.length;
+
+            highlightUnit = hucLayerView.highlight(
+              feature.attributes['OBJECTID']
+            );
+          });
+        } else if (laySelect === 'Catchments') {
+          const queryCatch = catchments.createQuery(point);
+          queryCatch.geometry = point;
+          queryCatch.outFields = ['*'];
+
+          catchments.queryFeatures(queryCatch).then(function(result) {
+            let feature = result.features[0];
+            _this.catchID = feature.attributes.Catchment_ID;
+
+            if (_this.units.includes(_this.catchID) == false) {
+              _this.units.push(_this.catchID);
+
+              _this.highlighted.push([
+                feature.attributes['OBJECTID'],
+                _this.catchID,
+              ]);
+            }
+
+            _this.unitLength = _this.units.length;
+
+            highlightUnit = catchLayerView.highlight(
+              feature.attributes['OBJECTID']
+            );
+          });
+        } else if (laySelect === 'Field Boundaries') {
+          const queryField = field.createQuery(point);
+          queryField.geometry = point;
+          queryField.outFields = ['*'];
+
+          field.queryFeatures(queryField).then(function(result) {
+            let feature = result.features[0];
+            _this.fID = feature.attributes.fid;
+
+            if (_this.units.includes(_this.fID) == false) {
+              _this.units.push(_this.fID);
+
+              _this.highlighted.push([
+                feature.attributes['OBJECTID'],
+                _this.fID,
+              ]);
+            }
+
+            _this.unitLength = _this.units.length;
+
+            highlightUnit = fieldLayerView.highlight(
+              feature.attributes['OBJECTID']
+            );
+          });
+        }
+
+        _this.unitSelection = _this.units;
+      }
+    });
+
+    _this.$watch('unitIndex', () => {
+      let layer;
+
+      if (this.layerSelection === 'NRCS Resource Units') {
+        layer = nrcsLayerView;
+      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+        layer = hucLayerView;
+      } else if (this.layerSelection === 'Catchments') {
+        layer = catchLayerView;
+      } else if (this.layerSelection === 'Field Boundaries') {
+        layer = fieldLayerView;
+      }
+      _this.unitSelection.forEach((unit, index) => {
+        console.log(unit, index);
+        console.log(_this.unitIndex);
+        if (index === _this.unitIndex) {
+          console.log(unit);
+          console.log(_this.highlighted);
+          _this.highlighted.forEach((i, index) => {
+            console.log(i);
+            layer._highlightIds.forEach((a, key) => {
+              if (i[1] === unit && i[0] === key) {
+                console.log(layer._highlightIds);
+                console.log(a);
+
+                layer._highlightIds.delete(i[0]);
+
+                _this.highlighted.splice(index);
+
+                console.log(layer._highlightIds);
+                _this.unitIndex = null;
+              }
+            });
+          });
+          console.log(_this.highlighted);
+        }
+      });
+
+      console.log(_this.unitIndex);
+    });
+
+    // Query tables
+    this.$watch('loadingVis', () => {
+      if (this.loadingVis === true) {
+        // Table Queries
+        const query1 = table1.createQuery();
+        const query2 = table2.createQuery();
+        const query3 = table3.createQuery();
+        const query4 = table4.createQuery();
+
+        if (laySelect === 'NRCS Resource Units') {
+          console.log(laySelect);
+
+          _this.units.forEach((unit) => {
+            if (unit != 0) {
+              _this.laruID = unit;
+            }
+          });
+
+          query1.where = 'LARU = ' + _this.laruID;
+          query2.where = 'LARU = ' + _this.laruID;
+          query3.where = 'LARU = ' + _this.laruID;
+          query4.where = 'LARU = ' + _this.laruID;
+
+          table1.queryFeatures(query1).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.resourceUnits.push(i);
+              });
+            }
+          });
+
+          table2.queryFeatures(query2).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.resourceUnits.push(i);
+              });
+            }
+          });
+
+          table3.queryFeatures(query3).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.resourceUnits.push(i);
+              });
+            }
+          });
+
+          table4.queryFeatures(query4).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.resourceUnits.push(i);
+              });
+            }
+          });
+        } else if (laySelect === '12-Digit Hydrologic Units') {
+          console.log(laySelect);
+
+          _this.units.forEach((unit) => {
+            if (unit != 0) {
+              _this.hucID = unit;
+            }
+          });
+
+          query1.where = 'HUC_12 = ' + _this.hucID;
+          query2.where = 'HUC_12 = ' + _this.hucID;
+          query3.where = 'HUC_12 = ' + _this.hucID;
+          query4.where = 'HUC_12 = ' + _this.hucID;
+
+          table1.queryFeatures(query1).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.hucUnits.push(i);
+              });
+            }
+          });
+
+          table2.queryFeatures(query2).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.hucUnits.push(i);
+              });
+            }
+          });
+
+          table3.queryFeatures(query3).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.hucUnits.push(i);
+              });
+            }
+          });
+
+          console.log('table 4 query start');
+
+          table4.queryFeatures(query4).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log('table 4 query complete');
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.hucUnits.push(i);
+              });
+            }
+          });
+        } else if (laySelect === 'Catchments') {
+          _this.units.forEach((unit) => {
+            if (unit != 0) {
+              _this.catchID = unit;
+            }
+          });
+
+          query1.where = 'Catchment_ID = ' + _this.catchID;
+          query2.where = 'Catchment_ID = ' + _this.catchID;
+          query3.where = 'Catchment_ID = ' + _this.catchID;
+          query4.where = 'Catchment_ID = ' + _this.catchID;
+
+          table1.queryFeatures(query1).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.catchUnits.push(i);
+              });
+            }
+          });
+
+          table2.queryFeatures(query2).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.catchUnits.push(i);
+              });
+            }
+          });
+
+          table3.queryFeatures(query3).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.catchUnits.push(i);
+              });
+            }
+          });
+
+          table4.queryFeatures(query4).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.catchUnits.push(i);
+              });
+            }
+          });
+        } else if (laySelect === 'Field Boundaries') {
+          _this.units.forEach((unit) => {
+            if (unit != 0) {
+              _this.fID = unit;
+            }
+          });
+
+          query1.where = 'fid = ' + _this.fID;
+          query2.where = 'fid = ' + _this.fID;
+          query3.where = 'fid = ' + _this.fID;
+          query4.where = 'fid = ' + _this.fID;
+
+          table1.queryFeatures(query1).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.fieldUnits.push(i);
+              });
+            }
+          });
+
+          table2.queryFeatures(query2).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.fieldUnits.push(i);
+              });
+            }
+          });
+
+          table3.queryFeatures(query3).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.fieldUnits.push(i);
+              });
+            }
+          });
+
+          table4.queryFeatures(query4).then(function(result) {
+            _this.count = _this.count + 1;
+            console.log(_this.count);
+            if (result) {
+              console.log(result);
+
+              console.log(result.features[0]);
+              result.features.forEach((feat) => {
+                let i = {
+                  label: feat.attributes.CropName,
+                  cAcres: feat.attributes.CropArea_acres,
+                  nitr: feat.attributes.orig_nit_load,
+                  phos: feat.attributes.orig_phos_load,
+                  sed: feat.attributes.orig_sed_load,
+                  bmpSelect: [],
+                  newNitr: 0,
+                  newPhos: 0,
+                  newSed: 0,
+                };
+
+                _this.fieldUnits.push(i);
+              });
+            }
+          });
+        }
+      }
+    });
+
+    _this.$watch('unitLength', () => {
+      if (_this.unitLength > 4) {
+        this.unitClick.remove();
+      }
+    });
+
+    _this.$watch('count', () => {
+      console.log(_this.count);
+      if (_this.count === 4) {
+        _this.endLoading = true;
+      } else {
+        _this.endLoading = false;
+      }
+    });
+
+    _this.$watch('endLoading', () => {
+      if (_this.endLoading == true) {
+        _this.consolidateData();
+      }
+    });
+
     //code to add highlight feature for map image layer
     esri.mapView.popup.watch('selectedFeature', function(gra) {
       if (gra) {
@@ -164,7 +1171,7 @@ export default {
           outline: {
             // autocasts as new SimpleLineSymbol()
             color: [h.color.r, h.color.g, h.color.b, h.color.a],
-            width: 1,
+            width: 0,
           },
         };
         esri.mapView.graphics.add(gra);
@@ -366,6 +1373,208 @@ export default {
           }
         }
       });
+    },
+
+    consolidateData() {
+      if (this.layerSelection === 'NRCS Resource Units') {
+        this.resourceUnits.forEach((obj) => {
+          const label = obj.label;
+          if (!this.groupedObjects[label]) {
+            this.groupedObjects[label] = {
+              label,
+              cAcres: 0,
+              nitr: 0,
+              phos: 0,
+              sed: 0,
+              bmpSelect: [],
+            };
+          }
+          this.groupedObjects[label].cAcres += obj.cAcres;
+          this.groupedObjects[label].nitr += obj.nitr;
+          this.groupedObjects[label].phos += obj.phos;
+          this.groupedObjects[label].sed += obj.sed;
+        });
+
+        this.resourceUnits = Object.values(this.groupedObjects);
+
+        this.resourceUnits.forEach((i) => {
+          if (i.nitr) {
+            this.totalNitr += i.nitr;
+            i.nitr = i.nitr.toFixed(2);
+          }
+          if (i.phos) {
+            this.totalPhos += i.phos;
+            i.phos = i.phos.toFixed(2);
+          }
+          if (i.sed) {
+            this.totalSed += i.sed;
+            i.sed = i.sed.toFixed(2);
+          }
+          if (i.cAcres) {
+            this.totalCropArea += i.cAcres;
+            console.log(i.cAcres);
+            i.cAcres = i.cAcres.toFixed(2);
+          }
+        });
+
+        console.log(this.resourceUnits);
+
+        // this.totalNitr = this.totalNitr.toFixed(2);
+        // this.totalPhos = this.totalPhos.toFixed(2);
+        // this.totalSed = this.totalSed.toFixed(2);
+        // this.totalCropArea = this.totalCropArea.toFixed(0);
+        console.log(this.totalCropArea);
+      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+        console.log(this.hucUnits);
+
+        this.hucUnits.forEach((obj) => {
+          this.totalCropArea += obj.cAcres;
+
+          const label = obj.label;
+          if (!this.groupedObjects[label]) {
+            this.groupedObjects[label] = {
+              label,
+              cAcres: 0,
+              nitr: 0,
+              phos: 0,
+              sed: 0,
+              bmpSelect: [],
+            };
+          }
+          this.groupedObjects[label].cAcres += obj.cAcres;
+          this.groupedObjects[label].nitr += obj.nitr;
+          this.groupedObjects[label].phos += obj.phos;
+          this.groupedObjects[label].sed += obj.sed;
+        });
+
+        this.hucUnits = Object.values(this.groupedObjects);
+
+        console.log(this.hucUnits);
+
+        this.hucUnits.forEach((i) => {
+          // console.log(i);
+          if (i.nitr) {
+            this.totalNitr += i.nitr;
+            // i.nitr = i.nitr.toFixed(2);
+          }
+          if (i.phos) {
+            this.totalPhos += i.phos;
+            // i.phos = i.phos.toFixed(2);
+          }
+          if (i.sed) {
+            this.totalSed += i.sed;
+            // i.sed = i.sed.toFixed(2);
+          }
+          if (i.cAcres) {
+            // this.totalCropArea += i.cAcres;
+            // console.log(i.cAcres);
+            // i.cAcres = i.cAcres.toFixed(2);
+          }
+        });
+
+        // this.totalNitr = this.totalNitr.toFixed(2);
+        // this.totalPhos = this.totalPhos.toFixed(2);
+        // this.totalSed = this.totalSed.toFixed(2);
+        // this.totalCropArea = this.totalCropArea.toFixed(0);
+      } else if (this.layerSelection === 'Catchments') {
+        this.catchUnits.forEach((obj) => {
+          const label = obj.label;
+          if (!this.groupedObjects[label]) {
+            this.groupedObjects[label] = {
+              label,
+              cAcres: 0,
+              nitr: 0,
+              phos: 0,
+              sed: 0,
+              bmpSelect: [],
+            };
+          }
+          this.groupedObjects[label].cAcres += obj.cAcres;
+          this.groupedObjects[label].nitr += obj.nitr;
+          this.groupedObjects[label].phos += obj.phos;
+          this.groupedObjects[label].sed += obj.sed;
+        });
+
+        this.catchUnits = Object.values(this.groupedObjects);
+
+        this.catchUnits.forEach((i) => {
+          if (i.nitr) {
+            this.totalNitr += i.nitr;
+            i.nitr = i.nitr.toFixed(2);
+          }
+          if (i.phos) {
+            this.totalPhos += i.phos;
+            i.phos = i.phos.toFixed(2);
+          }
+          if (i.sed) {
+            this.totalSed += i.sed;
+            i.sed = i.sed.toFixed(2);
+          }
+          if (i.cAcres) {
+            this.totalCropArea += i.cAcres;
+            i.cAcres = i.cAcres.toFixed(2);
+          }
+        });
+
+        this.totalNitr = this.totalNitr.toFixed(2);
+        this.totalPhos = this.totalPhos.toFixed(2);
+        this.totalSed = this.totalSed.toFixed(2);
+        this.totalCropArea = this.totalCropArea.toFixed(0);
+      } else if (this.layerSelection === 'Field Boundaries') {
+        this.fieldUnits.forEach((obj) => {
+          const label = obj.label;
+          if (!this.groupedObjects[label]) {
+            this.groupedObjects[label] = {
+              label,
+              cAcres: 0,
+              nitr: 0,
+              phos: 0,
+              sed: 0,
+              bmpSelect: [],
+            };
+          }
+          this.groupedObjects[label].cAcres += obj.cAcres;
+          this.groupedObjects[label].nitr += obj.nitr;
+          this.groupedObjects[label].phos += obj.phos;
+          this.groupedObjects[label].sed += obj.sed;
+        });
+
+        this.fieldUnits = Object.values(this.groupedObjects);
+
+        this.fieldUnits.forEach((i) => {
+          if (i.nitr) {
+            this.totalNitr += i.nitr;
+            i.nitr = i.nitr.toFixed(2);
+          }
+          if (i.phos) {
+            this.totalPhos += i.phos;
+            i.phos = i.phos.toFixed(2);
+          }
+          if (i.sed) {
+            this.totalSed += i.sed;
+            i.sed = i.sed.toFixed(2);
+          }
+          if (i.cAcres) {
+            this.totalCropArea += i.cAcres;
+            i.cAcres = i.cAcres.toFixed(2);
+          }
+        });
+
+        this.totalNitr = this.totalNitr.toFixed(2);
+        this.totalPhos = this.totalPhos.toFixed(2);
+        this.totalSed = this.totalSed.toFixed(2);
+        this.totalCropArea = this.totalCropArea.toFixed(0);
+      }
+    },
+
+    removeHighlight(/*featureId, layer*/) {
+      // const index = this.highlighted.indexOf(featureId);
+
+      console.log(this.highlighted);
+      // if (index == this.unitIndex) {
+      //   this.highlighted.splice(index, 1);
+      //   layer.removeHighlight(featureId);
+      // }
     },
 
     updateSupportingOpacity() {

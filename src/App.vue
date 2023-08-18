@@ -87,6 +87,9 @@ import TheMap from './components/UI/TheMap.vue';
 import TheHeader from './components/UI/TheHeader.vue';
 import ThePanelTabsVertcial from './components/UI/ThePanelTabsVertical.vue';
 import ThePrint from './components/AppTools/ThePrint.vue';
+// import pdfMake from 'pdfmake/build/pdfmake';
+// import pdfFonts from 'pdfmake/build/vfs_fonts';
+// import htmlToPdfmake from 'html-to-pdfmake';
 
 export default {
   name: 'App',
@@ -125,6 +128,44 @@ export default {
     smallScreen() {
       return this.$q.screen.lt.sm;
     },
+    totalNitr() {
+      return this.$store.state.totalNitr;
+    },
+    totalPhos() {
+      return this.$store.state.totalPhos;
+    },
+    totalSed() {
+      return this.$store.state.totalSed;
+    },
+    totalCropArea() {
+      return this.$store.state.totalCropArea;
+    },
+    resourceUnits() {
+      return this.$store.state.resourceUnits;
+    },
+    hucUnits() {
+      return this.$store.state.hucUnits;
+    },
+    catchUnits() {
+      return this.$store.state.catchUnits;
+    },
+    fieldUnits() {
+      return this.$store.state.fieldUnits;
+    },
+    unitSelection() {
+      return this.$store.state.unitSelection;
+    },
+    layerSelection() {
+      return this.$store.state.layerSelection;
+    },
+    startReport() {
+      return this.$store.state.startReport;
+    },
+  },
+  watch: {
+    startReport() {
+      this.generatePDF();
+    },
   },
   mounted() {
     // create data store for the app
@@ -150,6 +191,96 @@ export default {
       document.getElementsByClassName('panelM').forEach((elem) => {
         elem.style.height = 'calc(100vh - ' + newVal + 'px)';
       });
+    },
+    async generatePDF() {
+      // Set the fonts for pdfmake
+      // pdfMake.vfs = pdfFonts.pdfMake.vfs;
+
+      // Create HTML blocks
+      var today = new Date();
+      var dateString = today.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+
+      // Pull in data
+      let unitType = '';
+      let totalUnits = this.unitSelection.toString();
+
+      if (this.layerSelection === 'NRCS Resource Units') {
+        unitType = 'Resource Units';
+      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+        unitType = 'HUC 12 Units';
+      } else if (this.layerSelection === 'Catchments') {
+        unitType = 'Catchment Units';
+      } else if (this.layerSelection === 'Field Boundaries') {
+        unitType = 'Agricultural Field Units';
+      }
+
+      // Create PDF template
+      var docDefinition = {
+        header: {
+          text: dateString,
+          alignment: 'right',
+          margin: [0, 20, 20, 0],
+        },
+        footer: function(currentPage, pageCount) {
+          return {
+            text:
+              'Page ' + currentPage.toString() + ' of ' + pageCount.toString(),
+            alignment: 'center',
+            margin: [0, 0, 0, 10],
+          };
+        },
+        content: [
+          {
+            text: 'Louisiana - TNC Freshwater Network',
+            style: ['header1', 'centerItem'],
+            margin: [0, 0, 0, 20],
+          },
+          {
+            text: [{ text: 'Selected Areas', style: 'boldItem' }],
+          },
+          {
+            text: [{ text: unitType + ' Selected: ' + totalUnits }],
+          },
+          {
+            text: [{ text: 'Total Nutrient Reduction:' }],
+          },
+          {
+            layout: 'lightHorizontalLines',
+            table: {
+              headerRows: 1,
+              widths: ['*', 'auto', 100, '*'],
+              body: [
+                [
+                  'All Load Sources - ' + this.totalCropArea,
+                  'Nitrogen',
+                  'Phosphorus',
+                  'Sediment',
+                ],
+                [
+                  'Initial Load (MT/yr)',
+                  this.totalNitr,
+                  this.totalPhos,
+                  this.totalSed,
+                ],
+                ['New Load (MT/yr)', 'New Nitr', 'New Phos', 'New Sed'],
+                ['Reduction', '%', '%', '%'],
+              ],
+            },
+          },
+          {
+            // Screenshot of map
+          },
+          {
+            // Crop load table per crop (if it has a BMP)
+          },
+        ],
+      };
+      console.log(docDefinition);
     },
   },
   updateAvailable(event) {

@@ -4,7 +4,7 @@
       style="overflow:hidden;"
       v-model="splitterModel"
       unit="px"
-      :limits="[55, 130]"
+      :limits="[55, 0]"
     >
       <!--Example with supporting layers in a vertical tab-->
 
@@ -22,7 +22,7 @@
           <!--each tab has two presentations, full or condensed, based on the size of the screen-->
 
           <q-separator></q-separator>
-          <q-route-tab
+          <!-- <q-route-tab
             v-if="!$store.state.condensedTabs && !smallScreen"
             style="padding:10px;"
             to="/tab1"
@@ -57,8 +57,8 @@
             name="tab2"
           >
             <q-icon name="public" size="lg"></q-icon>
-          </q-route-tab>
-          <q-separator></q-separator>
+          </q-route-tab> -->
+          <!-- <q-separator></q-separator> -->
           <q-route-tab
             v-if="!$store.state.condensedTabs && !smallScreen"
             style="padding:10px;"
@@ -66,8 +66,8 @@
             name="tab3"
           >
             <q-icon name="person" size="sm"></q-icon>
-            Tab <br />
-            Three</q-route-tab
+            NRCS <br />
+            CDA</q-route-tab
           >
           <q-route-tab
             v-if="$store.state.condensedTabs || smallScreen"
@@ -107,7 +107,7 @@
             </q-scroll-area>
           </q-tab-panel>
 
-          <q-tab-panel name="tab3" class="q-pr-none q-pl-lg q-pt-lg q-pb-lg">
+          <q-tab-panel name="tab3" class="q-pr-none q-pl-lg q-pb-lg">
             <q-scroll-area
               id=""
               class="panel panelM"

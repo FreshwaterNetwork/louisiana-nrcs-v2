@@ -77,6 +77,25 @@ export default createStore({
     showControls: false,
     hideControls: true,
     mapPrintURI: '',
+    layerSelection: '',
+    unitSelection: [],
+    referenceSelection: [],
+    unitLength: 0,
+    loadingVis: false,
+    mngmtVis: false,
+    endLoading: false,
+    resourceUnits: [],
+    hucUnits: [],
+    catchUnits: [],
+    fieldUnits: [],
+    totalNitr: 0,
+    totalPhos: 0,
+    totalSed: 0,
+    totalCropArea: 0,
+    startReport: false,
+    backBtn: false,
+    count: 0,
+    unitIndex: '',
   },
   mutations: {
     //data retrieved from web services
@@ -107,6 +126,63 @@ export default createStore({
     },
     updateContainerWidth(state, val) {
       state.containerWidth = val;
+    },
+    updateLayerSelection(state, val) {
+      state.layerSelection = val;
+    },
+    updateUnitSelection(state, val) {
+      state.unitSelection = val;
+    },
+    updateReferenceSelection(state, val) {
+      state.referenceSelection = val;
+    },
+    updateUnitLength(state, val) {
+      state.unitLength = val;
+    },
+    updateLoadingVis(state, val) {
+      state.loadingVis = val;
+    },
+    updateMngmtVis(state, val) {
+      state.mngmtVis = val;
+    },
+    updateEndLoading(state, val) {
+      state.endLoading = val;
+    },
+    updateResourceUnits(state, val) {
+      state.resourceUnits = val;
+    },
+    updateHucUnits(state, val) {
+      state.hucUnits = val;
+    },
+    updateCatchUnits(state, val) {
+      state.catchUnits = val;
+    },
+    updateFieldUnits(state, val) {
+      state.fieldUnits = val;
+    },
+    updateTotalNitr(state, val) {
+      state.totalNitr = val;
+    },
+    updateTotalPhos(state, val) {
+      state.totalPhos = val;
+    },
+    updateTotalSed(state, val) {
+      state.totalSed = val;
+    },
+    updateTotalCropArea(state, val) {
+      state.totalCropArea = val;
+    },
+    updateStartReport(state, val) {
+      state.startReport = val;
+    },
+    updateBackBtn(state, val) {
+      state.backBtn = val;
+    },
+    updateCount(state, val) {
+      state.count = val;
+    },
+    updateUnitIndex(state, val) {
+      state.unitIndex = val;
     },
   },
 
@@ -225,8 +301,8 @@ export default createStore({
               }
             });
             smcount = smcount + 1;
-            console.log(smcount);
-            console.log(smnum);
+            // console.log(smcount);
+            // console.log(smnum);
             if (smcount == smnum) {
               context.commit('updateSupportingLayers', obj);
               context.commit('updateSLReady', true);

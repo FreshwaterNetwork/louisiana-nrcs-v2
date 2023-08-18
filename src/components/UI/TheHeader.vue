@@ -33,10 +33,10 @@
       </q-menu>
     </q-btn>
     <span class="text-weight-thin text-white"
-      ><span class="text-weight-thin"> Application Title Update</span>
+      ><span class="text-weight-thin"> Freshwater Network</span>
       <span class="text-weight-thin text-secondary"> </span>
       <span class="text-secondary text-subtitle1 text-weight-thin"
-        >&nbsp;&nbsp;Application Subtitle</span
+        >&nbsp;&nbsp;Louisiana Freshwater Assessment</span
       ></span
     >
     <div>
@@ -51,13 +51,15 @@
   </header>
 
   <!-- INTRO DIALOG -->
-  <q-dialog v-model="showHelp" :persistent="persistent">
+  <!-- <q-dialog v-model="showHelp" :persistent="persistent">
     <q-card style="height: 72vh; max-width: 70vw">
       <q-toolbar class="bg-white">
         <q-toolbar-title>
           <span class="text-weight-thin text-primary"
-            >Application Title
-            <span class="text-weight-thin"> app subtitle </span>
+            >Freshwater Network
+            <span class="text-weight-thin">
+              Louisiana Freshwater Assessment
+            </span>
           </span></q-toolbar-title
         >
       </q-toolbar>
@@ -86,7 +88,7 @@
         the top of the screen
       </div>
     </q-card>
-  </q-dialog>
+  </q-dialog> -->
 </template>
 
 <script>
