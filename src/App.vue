@@ -87,8 +87,8 @@ import TheMap from './components/UI/TheMap.vue';
 import TheHeader from './components/UI/TheHeader.vue';
 import ThePanelTabsVertcial from './components/UI/ThePanelTabsVertical.vue';
 import ThePrint from './components/AppTools/ThePrint.vue';
-// import pdfMake from 'pdfmake/build/pdfmake';
-// import pdfFonts from 'pdfmake/build/vfs_fonts';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
 // import htmlToPdfmake from 'html-to-pdfmake';
 
 export default {
@@ -161,10 +161,37 @@ export default {
     startReport() {
       return this.$store.state.startReport;
     },
+    reportTotalTable() {
+      return this.$store.state.reportTotalTable;
+    },
+    reportCropTables() {
+      return this.$store.state.reportCropTables;
+    },
+    totalNewLoadNit() {
+      return this.$store.state.totalNewLoadNit;
+    },
+    totalNewLoadPhos() {
+      return this.$store.state.totalNewLoadPhos;
+    },
+    totalNewLoadSed() {
+      return this.$store.state.totalNewLoadSed;
+    },
+    totalReducedPercentNit() {
+      return this.$store.state.totalReducedPercentNit;
+    },
+    totalReducedPercentPhos() {
+      return this.$store.state.totalReducedPercentPhos;
+    },
+    totalReducedPercentSed() {
+      return this.$store.state.totalReducedPercentSed;
+    },
+    mapPrintURI() {
+      return this.$store.state.mapPrintURI;
+    },
   },
   watch: {
-    startReport() {
-      this.generatePDF();
+    mapPrintURI() {
+      this.generatePdf();
     },
   },
   mounted() {
@@ -192,9 +219,12 @@ export default {
         elem.style.height = 'calc(100vh - ' + newVal + 'px)';
       });
     },
+    startPdf() {
+      this.printMap = true;
+    },
     async generatePDF() {
       // Set the fonts for pdfmake
-      // pdfMake.vfs = pdfFonts.pdfMake.vfs;
+      pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
       // Create HTML blocks
       var today = new Date();
@@ -208,6 +238,8 @@ export default {
       // Pull in data
       let unitType = '';
       let totalUnits = this.unitSelection.toString();
+      let cropTable;
+      console.log(cropTable);
 
       if (this.layerSelection === 'NRCS Resource Units') {
         unitType = 'Resource Units';
@@ -218,6 +250,10 @@ export default {
       } else if (this.layerSelection === 'Field Boundaries') {
         unitType = 'Agricultural Field Units';
       }
+
+      // this.reportCropTables.forEach((table) => {
+      //   cropTable = htmlToPdfmake(table);
+      // });
 
       // Create PDF template
       var docDefinition = {
@@ -267,20 +303,34 @@ export default {
                   this.totalPhos,
                   this.totalSed,
                 ],
-                ['New Load (MT/yr)', 'New Nitr', 'New Phos', 'New Sed'],
-                ['Reduction', '%', '%', '%'],
+                [
+                  'New Load (MT/yr)',
+                  this.totalNewLoadNit,
+                  this.totalNewLoadPhos,
+                  this.totalNewLoadSed,
+                ],
+                [
+                  'Reduction',
+                  this.totalReducedPercentNit + '%',
+                  this.totalReducedPercentPhos + '%',
+                  this.totalReducedPercentSed + '%',
+                ],
               ],
             },
           },
           {
             // Screenshot of map
+            image: this.mapPrintURI,
+            width: 500,
+            height: 500,
           },
-          {
-            // Crop load table per crop (if it has a BMP)
-          },
+          // Crop load table per crop (if it has a BMP)
+          // cropTable
+          // ,
         ],
       };
       console.log(docDefinition);
+      // pdfMake.createPdf(docDefinition).download();
     },
   },
   updateAvailable(event) {

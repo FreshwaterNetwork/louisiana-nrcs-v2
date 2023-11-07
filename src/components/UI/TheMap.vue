@@ -214,6 +214,17 @@ export default {
         this.$store.commit('updateUnitIndex', value);
       },
     },
+    printMap() {
+      return this.$store.state.printMap;
+    },
+    initLoadData: {
+      get() {
+        return this.$store.state.initLoadData;
+      },
+      set(value) {
+        this.$store.commit('updateInitLoadData', value);
+      },
+    },
   },
   watch: {
     supportingMapVisibleLayers() {
@@ -221,6 +232,11 @@ export default {
     },
     supportingVisibleLayerOpacity() {
       this.updateSupportingOpacity();
+    },
+    printMap() {
+      if (this.printMap) {
+        this.getMapPrint();
+      }
     },
   },
 
@@ -411,49 +427,25 @@ export default {
     const table1 = new FeatureLayer({
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/7',
-      outFields: [
-        'CropName',
-        'CropArea_acres',
-        'orig_nit_load',
-        'orig_phos_load',
-        'orig_sed_load',
-      ],
+      outFields: ['*'],
     });
 
     const table2 = new FeatureLayer({
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/8',
-      outFields: [
-        'CropName',
-        'CropArea_acres',
-        'orig_nit_load',
-        'orig_phos_load',
-        'orig_sed_load',
-      ],
+      outFields: ['*'],
     });
 
     const table3 = new FeatureLayer({
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/9',
-      outFields: [
-        'CropName',
-        'CropArea_acres',
-        'orig_nit_load',
-        'orig_phos_load',
-        'orig_sed_load',
-      ],
+      outFields: ['*'],
     });
 
     const table4 = new FeatureLayer({
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/10',
-      outFields: [
-        'CropName',
-        'CropArea_acres',
-        'orig_nit_load',
-        'orig_phos_load',
-        'orig_sed_load',
-      ],
+      outFields: ['*'],
     });
 
     console.log(table1, table2, table3, table4);
@@ -555,6 +547,11 @@ export default {
             highlightUnit = nrcsLayerView.highlight(
               feature.attributes['OBJECTID']
             );
+
+            console.log(nrcs);
+            console.log(esri.map);
+            console.log(highlightUnit);
+            console.log(nrcsLayerView);
           });
         } else if (laySelect === '12-Digit Hydrologic Units') {
           const queryHuc = huc.createQuery(point);
@@ -634,6 +631,12 @@ export default {
       }
     });
 
+    // let unitChip = document.getElementById('unit-chip');
+
+    // unitChip.on('click', function() {
+    //   console.log(unitChip);
+    // });
+
     _this.$watch('unitIndex', () => {
       let layer;
 
@@ -712,10 +715,20 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
-                  bmpSelect: [],
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.KffactF,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
                 };
 
                 _this.resourceUnits.push(i);
@@ -737,10 +750,20 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
-                  bmpSelect: [],
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.KffactF,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
                 };
 
                 _this.resourceUnits.push(i);
@@ -762,10 +785,20 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
-                  bmpSelect: [],
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.KffactF,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
                 };
 
                 _this.resourceUnits.push(i);
@@ -787,10 +820,20 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
-                  bmpSelect: [],
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.KffactF,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
                 };
 
                 _this.resourceUnits.push(i);
@@ -825,6 +868,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -850,6 +901,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -875,6 +934,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -890,7 +957,6 @@ export default {
 
           table4.queryFeatures(query4).then(function(result) {
             _this.count = _this.count + 1;
-            console.log('table 4 query complete');
             console.log(_this.count);
             if (result) {
               console.log(result);
@@ -903,6 +969,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -939,6 +1013,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -964,6 +1046,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -989,6 +1079,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -1014,6 +1112,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -1050,6 +1156,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -1075,6 +1189,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -1100,6 +1222,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -1125,6 +1255,14 @@ export default {
                   nitr: feat.attributes.orig_nit_load,
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
+                  rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
+                  k_factor: feat.attributes.Kffact,
+                  cls_factor: feat.attributes.Cls_factor,
+                  runoff_in_yr: feat.attributes.Runoff_in_yr,
+                  nit_emc_value: feat.attributes.Nitr_EMC,
+                  phos_emc_value: feat.attributes.Phos_EMC,
+                  c: feat.attributes.C,
+                  p: feat.attributes.P,
                   bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
@@ -1156,7 +1294,7 @@ export default {
 
     _this.$watch('endLoading', () => {
       if (_this.endLoading == true) {
-        _this.consolidateData();
+        _this.consolidateInitLoads();
       }
     });
 
@@ -1374,198 +1512,289 @@ export default {
         }
       });
     },
+    consolidateInitLoads() {
+      const nonCrop = [
+        'Background',
+        'Barren',
+        'Deciduous Forest',
+        'Evergreen Forest',
+        'Herbaceous Wetlands',
+        'Mixed Forest',
+        'Open Water',
+        'Shrubland',
+        'Woody Wetlands',
+        'Developed/Open Space',
+        'Developed/Med Intensity',
+        'Developed/Low Intensity',
+        'Developed/High Intensity',
+        'Aquaculture',
+      ];
 
-    consolidateData() {
       if (this.layerSelection === 'NRCS Resource Units') {
         this.resourceUnits.forEach((obj) => {
           const label = obj.label;
-          if (!this.groupedObjects[label]) {
+          if (!this.groupedObjects[label] && !nonCrop.includes(label)) {
             this.groupedObjects[label] = {
               label,
-              cAcres: 0,
               nitr: 0,
               phos: 0,
               sed: 0,
-              bmpSelect: [],
+              acres: 0,
+              newNitr: 0,
+              newPhos: 0,
+              newSed: 0,
+              nitrReducPercent: 0,
+              phosReducPercent: 0,
+              sedReducPercent: 0,
             };
           }
-          this.groupedObjects[label].cAcres += obj.cAcres;
-          this.groupedObjects[label].nitr += obj.nitr;
-          this.groupedObjects[label].phos += obj.phos;
-          this.groupedObjects[label].sed += obj.sed;
-        });
 
-        this.resourceUnits = Object.values(this.groupedObjects);
-
-        this.resourceUnits.forEach((i) => {
-          if (i.nitr) {
-            this.totalNitr += i.nitr;
-            i.nitr = i.nitr.toFixed(2);
-          }
-          if (i.phos) {
-            this.totalPhos += i.phos;
-            i.phos = i.phos.toFixed(2);
-          }
-          if (i.sed) {
-            this.totalSed += i.sed;
-            i.sed = i.sed.toFixed(2);
-          }
-          if (i.cAcres) {
-            this.totalCropArea += i.cAcres;
-            console.log(i.cAcres);
-            i.cAcres = i.cAcres.toFixed(2);
+          if (this.groupedObjects[label]) {
+            this.groupedObjects[label].nitr += obj.nitr;
+            this.groupedObjects[label].phos += obj.phos;
+            this.groupedObjects[label].sed += obj.sed;
+            this.groupedObjects[label].acres += obj.cAcres;
           }
         });
 
-        console.log(this.resourceUnits);
+        this.initLoadData = Object.values(this.groupedObjects);
 
-        // this.totalNitr = this.totalNitr.toFixed(2);
-        // this.totalPhos = this.totalPhos.toFixed(2);
-        // this.totalSed = this.totalSed.toFixed(2);
-        // this.totalCropArea = this.totalCropArea.toFixed(0);
-        console.log(this.totalCropArea);
-      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
-        console.log(this.hucUnits);
-
-        this.hucUnits.forEach((obj) => {
-          this.totalCropArea += obj.cAcres;
-
-          const label = obj.label;
-          if (!this.groupedObjects[label]) {
-            this.groupedObjects[label] = {
-              label,
-              cAcres: 0,
-              nitr: 0,
-              phos: 0,
-              sed: 0,
-              bmpSelect: [],
-            };
-          }
-          this.groupedObjects[label].cAcres += obj.cAcres;
-          this.groupedObjects[label].nitr += obj.nitr;
-          this.groupedObjects[label].phos += obj.phos;
-          this.groupedObjects[label].sed += obj.sed;
-        });
-
-        this.hucUnits = Object.values(this.groupedObjects);
-
-        console.log(this.hucUnits);
-
-        this.hucUnits.forEach((i) => {
-          // console.log(i);
-          if (i.nitr) {
-            this.totalNitr += i.nitr;
-            // i.nitr = i.nitr.toFixed(2);
-          }
-          if (i.phos) {
-            this.totalPhos += i.phos;
-            // i.phos = i.phos.toFixed(2);
-          }
-          if (i.sed) {
-            this.totalSed += i.sed;
-            // i.sed = i.sed.toFixed(2);
-          }
-          if (i.cAcres) {
-            // this.totalCropArea += i.cAcres;
-            // console.log(i.cAcres);
-            // i.cAcres = i.cAcres.toFixed(2);
-          }
-        });
-
-        // this.totalNitr = this.totalNitr.toFixed(2);
-        // this.totalPhos = this.totalPhos.toFixed(2);
-        // this.totalSed = this.totalSed.toFixed(2);
-        // this.totalCropArea = this.totalCropArea.toFixed(0);
-      } else if (this.layerSelection === 'Catchments') {
-        this.catchUnits.forEach((obj) => {
-          const label = obj.label;
-          if (!this.groupedObjects[label]) {
-            this.groupedObjects[label] = {
-              label,
-              cAcres: 0,
-              nitr: 0,
-              phos: 0,
-              sed: 0,
-              bmpSelect: [],
-            };
-          }
-          this.groupedObjects[label].cAcres += obj.cAcres;
-          this.groupedObjects[label].nitr += obj.nitr;
-          this.groupedObjects[label].phos += obj.phos;
-          this.groupedObjects[label].sed += obj.sed;
-        });
-
-        this.catchUnits = Object.values(this.groupedObjects);
-
-        this.catchUnits.forEach((i) => {
-          if (i.nitr) {
-            this.totalNitr += i.nitr;
-            i.nitr = i.nitr.toFixed(2);
-          }
-          if (i.phos) {
-            this.totalPhos += i.phos;
-            i.phos = i.phos.toFixed(2);
-          }
-          if (i.sed) {
-            this.totalSed += i.sed;
-            i.sed = i.sed.toFixed(2);
-          }
-          if (i.cAcres) {
-            this.totalCropArea += i.cAcres;
-            i.cAcres = i.cAcres.toFixed(2);
-          }
-        });
-
-        this.totalNitr = this.totalNitr.toFixed(2);
-        this.totalPhos = this.totalPhos.toFixed(2);
-        this.totalSed = this.totalSed.toFixed(2);
-        this.totalCropArea = this.totalCropArea.toFixed(0);
-      } else if (this.layerSelection === 'Field Boundaries') {
-        this.fieldUnits.forEach((obj) => {
-          const label = obj.label;
-          if (!this.groupedObjects[label]) {
-            this.groupedObjects[label] = {
-              label,
-              cAcres: 0,
-              nitr: 0,
-              phos: 0,
-              sed: 0,
-              bmpSelect: [],
-            };
-          }
-          this.groupedObjects[label].cAcres += obj.cAcres;
-          this.groupedObjects[label].nitr += obj.nitr;
-          this.groupedObjects[label].phos += obj.phos;
-          this.groupedObjects[label].sed += obj.sed;
-        });
-
-        this.fieldUnits = Object.values(this.groupedObjects);
-
-        this.fieldUnits.forEach((i) => {
-          if (i.nitr) {
-            this.totalNitr += i.nitr;
-            i.nitr = i.nitr.toFixed(2);
-          }
-          if (i.phos) {
-            this.totalPhos += i.phos;
-            i.phos = i.phos.toFixed(2);
-          }
-          if (i.sed) {
-            this.totalSed += i.sed;
-            i.sed = i.sed.toFixed(2);
-          }
-          if (i.cAcres) {
-            this.totalCropArea += i.cAcres;
-            i.cAcres = i.cAcres.toFixed(2);
-          }
-        });
-
-        this.totalNitr = this.totalNitr.toFixed(2);
-        this.totalPhos = this.totalPhos.toFixed(2);
-        this.totalSed = this.totalSed.toFixed(2);
-        this.totalCropArea = this.totalCropArea.toFixed(0);
+        // this.resourceUnits.forEach((i) => {
+        //   if (nonCrop.includes(i.label) == false) {
+        //     if (i.nitr) {
+        //       this.totalNitr += i.nitr;
+        //     }
+        //     if (i.phos) {
+        //       this.totalPhos += i.phos;
+        //     }
+        //     if (i.sed) {
+        //       this.totalSed += i.sed;
+        //     }
+        //     if (i.cAcres) {
+        //       this.totalCropArea += i.cAcres;
+        //     }
+        //   }
+        // });
+      } else if (this.layerSelection === '') {
+        console.log('not nrcs');
+      } else if (this.layerSelection === '') {
+        console.log('not nrcs');
+      } else if (this.layerSelection === '') {
+        console.log('not nrcs');
       }
     },
+
+    // consolidateData() {
+    //   const nonCrop = [
+    //     'Background',
+    //     'Barren',
+    //     'Deciduous Forest',
+    //     'Evergreen Forest',
+    //     'Herbaceous Wetlands',
+    //     'Mixed Forest',
+    //     'Open Water',
+    //     'Shrubland',
+    //     'Woody Wetlands',
+    //     'Developed/Open Space',
+    //     'Developed/Med Intensity',
+    //     'Developed/Low Intensity',
+    //     'Developed/High Intensity',
+    //     'Aquaculture',
+    //   ];
+
+    //   if (this.layerSelection === 'NRCS Resource Units') {
+    //     this.resourceUnits.forEach((obj) => {
+    //       const label = obj.label;
+    //       if (!this.groupedObjects[label]) {
+    //         this.groupedObjects[label] = {
+    //           label,
+    //           cAcres: 0,
+    //           nitr: 0,
+    //           phos: 0,
+    //           sed: 0,
+    //           rFactor: 0,
+    //           k_factor: 0,
+    //           cls_factor: 0,
+    //           runoff_in_yr: 0,
+    //           nit_emc_value: 0,
+    //           phos_emc_value: 0,
+    //           c: 0,
+    //           p: 0,
+    //           newNitr: 0,
+    //           newPhos: 0,
+    //           newSed: 0,
+    //           nitrReducPercent: 0,
+    //           phosReducPercent: 0,
+    //           sedReducPercent: 0,
+    //         };
+    //       }
+    //       this.groupedObjects[label].cAcres += obj.cAcres;
+    //       this.groupedObjects[label].nitr += obj.nitr;
+    //       this.groupedObjects[label].phos += obj.phos;
+    //       this.groupedObjects[label].sed += obj.sed;
+    //       this.groupedObjects[label].rFactor = obj.rFactor;
+    //       this.groupedObjects[label].k_factor = obj.k_factor;
+    //       this.groupedObjects[label].cls_factor = obj.cls_factor;
+    //       this.groupedObjects[label].runoff_in_yr = obj.runoff_in_yr;
+    //       this.groupedObjects[label].nit_emc_value = obj.nit_emc_value;
+    //       this.groupedObjects[label].phos_emc_value = obj.phos_emc_value;
+    //       this.groupedObjects[label].c = obj.c;
+    //       this.groupedObjects[label].p = obj.p;
+    //       this.groupedObjects[label].newNitr += obj.newNitr;
+    //       this.groupedObjects[label].newPhos += obj.newPhos;
+    //       this.groupedObjects[label].newSed += obj.newSed;
+    //       this.groupedObjects[label].nitrReducPercent += obj.nitrReducPercent;
+    //       this.groupedObjects[label].phosReducPercent += obj.phosReducPercent;
+    //       this.groupedObjects[label].sedReducPercent += obj.sedReducPercent;
+    //     });
+
+    //     this.resourceUnits = Object.values(this.groupedObjects);
+
+    //     this.resourceUnits.forEach((i) => {
+    //       if (nonCrop.includes(i.label) == false) {
+    //         if (i.nitr) {
+    //           this.totalNitr += i.nitr;
+    //         }
+    //         if (i.phos) {
+    //           this.totalPhos += i.phos;
+    //         }
+    //         if (i.sed) {
+    //           this.totalSed += i.sed;
+    //         }
+    //         if (i.cAcres) {
+    //           this.totalCropArea += i.cAcres;
+    //           console.log(i.cAcres);
+    //         }
+    //       }
+    //     });
+    //   } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+    //     this.hucUnits.forEach((obj) => {
+    //       const label = obj.label;
+    //       if (!this.groupedObjects[label]) {
+    //         this.groupedObjects[label] = {
+    //           label,
+    //           cAcres: 0,
+    //           nitr: 0,
+    //           phos: 0,
+    //           sed: 0,
+    //           bmpSelect: [],
+    //         };
+    //       }
+    //       this.groupedObjects[label].cAcres += obj.cAcres;
+    //       this.groupedObjects[label].nitr += obj.nitr;
+    //       this.groupedObjects[label].phos += obj.phos;
+    //       this.groupedObjects[label].sed += obj.sed;
+    //     });
+
+    //     this.hucUnits = Object.values(this.groupedObjects);
+
+    //     this.hucUnits.forEach((i) => {
+    //       if (nonCrop.includes(i.label) == false) {
+    //         if (i.nitr) {
+    //           this.totalNitr += i.nitr;
+    //           i.nitr = i.nitr.toFixed(2);
+    //         }
+    //         if (i.phos) {
+    //           this.totalPhos += i.phos;
+    //           i.phos = i.phos.toFixed(2);
+    //         }
+    //         if (i.sed) {
+    //           this.totalSed += i.sed;
+    //           i.sed = i.sed.toFixed(2);
+    //         }
+    //         if (i.cAcres) {
+    //           this.totalCropArea += i.cAcres;
+    //           console.log(i.cAcres);
+    //           i.cAcres = i.cAcres.toFixed(2);
+    //         }
+    //       }
+    //     });
+    //   } else if (this.layerSelection === 'Catchments') {
+    //     this.catchUnits.forEach((obj) => {
+    //       const label = obj.label;
+    //       if (!this.groupedObjects[label]) {
+    //         this.groupedObjects[label] = {
+    //           label,
+    //           cAcres: 0,
+    //           nitr: 0,
+    //           phos: 0,
+    //           sed: 0,
+    //           bmpSelect: [],
+    //         };
+    //       }
+    //       this.groupedObjects[label].cAcres += obj.cAcres;
+    //       this.groupedObjects[label].nitr += obj.nitr;
+    //       this.groupedObjects[label].phos += obj.phos;
+    //       this.groupedObjects[label].sed += obj.sed;
+    //     });
+
+    //     this.catchUnits = Object.values(this.groupedObjects);
+
+    //     this.catchUnits.forEach((i) => {
+    //       if (nonCrop.includes(i.label) == false) {
+    //         if (i.nitr) {
+    //           this.totalNitr += i.nitr;
+    //           i.nitr = i.nitr.toFixed(2);
+    //         }
+    //         if (i.phos) {
+    //           this.totalPhos += i.phos;
+    //           i.phos = i.phos.toFixed(2);
+    //         }
+    //         if (i.sed) {
+    //           this.totalSed += i.sed;
+    //           i.sed = i.sed.toFixed(2);
+    //         }
+    //         if (i.cAcres) {
+    //           this.totalCropArea += i.cAcres;
+    //           console.log(i.cAcres);
+    //           i.cAcres = i.cAcres.toFixed(2);
+    //         }
+    //       }
+    //     });
+    //   } else if (this.layerSelection === 'Field Boundaries') {
+    //     this.fieldUnits.forEach((obj) => {
+    //       const label = obj.label;
+    //       if (!this.groupedObjects[label]) {
+    //         this.groupedObjects[label] = {
+    //           label,
+    //           cAcres: 0,
+    //           nitr: 0,
+    //           phos: 0,
+    //           sed: 0,
+    //           bmpSelect: [],
+    //         };
+    //       }
+    //       this.groupedObjects[label].cAcres += obj.cAcres;
+    //       this.groupedObjects[label].nitr += obj.nitr;
+    //       this.groupedObjects[label].phos += obj.phos;
+    //       this.groupedObjects[label].sed += obj.sed;
+    //     });
+
+    //     this.fieldUnits = Object.values(this.groupedObjects);
+
+    //     this.fieldUnits.forEach((i) => {
+    //       if (nonCrop.includes(i.label) == false) {
+    //         if (i.nitr) {
+    //           this.totalNitr += i.nitr;
+    //           i.nitr = i.nitr.toFixed(2);
+    //         }
+    //         if (i.phos) {
+    //           this.totalPhos += i.phos;
+    //           i.phos = i.phos.toFixed(2);
+    //         }
+    //         if (i.sed) {
+    //           this.totalSed += i.sed;
+    //           i.sed = i.sed.toFixed(2);
+    //         }
+    //         if (i.cAcres) {
+    //           this.totalCropArea += i.cAcres;
+    //           console.log(i.cAcres);
+    //           i.cAcres = i.cAcres.toFixed(2);
+    //         }
+    //       }
+    //     });
+    //   }
+    // },
 
     removeHighlight(/*featureId, layer*/) {
       // const index = this.highlighted.indexOf(featureId);

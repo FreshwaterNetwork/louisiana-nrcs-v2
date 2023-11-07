@@ -1,5 +1,6 @@
 import { createStore } from 'vuex';
 import esriRequest from '@arcgis/core/request';
+import calculateStore from './calculateStore';
 
 export default createStore({
   state: {
@@ -96,6 +97,20 @@ export default createStore({
     backBtn: false,
     count: 0,
     unitIndex: '',
+    toggledOff: false,
+    reportTotalTable: '',
+    reportCropTables: [],
+    totalNewLoadNit: 0,
+    totalNewLoadPhos: 0,
+    totalNewLoadSed: 0,
+    totalReducedPercentNit: 0,
+    totalReducedPercentPhos: 0,
+    totalReducedPercentSed: 0,
+    printMap: false,
+    initLoadData: [],
+    areaChanged: false,
+    bmpAltered: {},
+    areaApplied: 0,
   },
   mutations: {
     //data retrieved from web services
@@ -120,6 +135,7 @@ export default createStore({
     },
     updateMapPrintURI(state, uri) {
       state.mapPrintURI = uri;
+      state.printMap = false;
     },
     updateCondensedTabs(state, bool) {
       state.condensedTabs = bool;
@@ -183,6 +199,48 @@ export default createStore({
     },
     updateUnitIndex(state, val) {
       state.unitIndex = val;
+    },
+    updateToggledOff(state, val) {
+      state.toggledOff = val;
+    },
+    updateReportTotalTable(state, val) {
+      state.reportTotalTable = val;
+    },
+    updateReportCropTables(state, val) {
+      state.reportCropTables = val;
+    },
+    updateTotalNewLoadNit(state, val) {
+      state.totalNewLoadNit = val;
+    },
+    updateTotalNewLoadPhos(state, val) {
+      state.totalNewLoadPhos = val;
+    },
+    updateTotalNewLoadSed(state, val) {
+      state.totalNewLoadSed = val;
+    },
+    updateTotalReducedPercentNit(state, val) {
+      state.totalReducedPercentNit = val;
+    },
+    updateTotalReducedPercentPhos(state, val) {
+      state.totalReducedPercentPhos = val;
+    },
+    updateTotalReducedPercentSed(state, val) {
+      state.totalReducedPercentSed = val;
+    },
+    updatePrintMap(state, val) {
+      state.printMap = val;
+    },
+    updateInitLoadData(state, val) {
+      state.initLoadData = val;
+    },
+    updateAreaChanged(state, val) {
+      state.areaChanged = val;
+    },
+    updateBmpAltered(state, val) {
+      state.bmpAltered = val;
+    },
+    updateAreaApplied(state, val) {
+      state.areaApplied = val;
     },
   },
 
@@ -315,5 +373,7 @@ export default createStore({
     },
   },
 
-  modules: {},
+  modules: {
+    calculateStore,
+  },
 });

@@ -62,8 +62,8 @@
           <q-route-tab
             v-if="!$store.state.condensedTabs && !smallScreen"
             style="padding:10px;"
-            to="/tab3"
-            name="tab3"
+            to="/louisiana-cda"
+            name="louisiana-cda"
           >
             <q-icon name="person" size="sm"></q-icon>
             NRCS <br />
@@ -72,8 +72,8 @@
           <q-route-tab
             v-if="$store.state.condensedTabs || smallScreen"
             style="padding:10px;"
-            to="/tab3"
-            name="tab3"
+            to="/louisiana-cda"
+            name="louisiana-cda"
           >
             <q-icon name="person" size="lg"></q-icon>
           </q-route-tab>
@@ -107,7 +107,7 @@
             </q-scroll-area>
           </q-tab-panel>
 
-          <q-tab-panel name="tab3" class="q-pr-none q-pl-lg q-pb-lg">
+          <q-tab-panel name="louisiana-cda" class="q-pr-none q-pl-lg q-pb-lg">
             <q-scroll-area
               id=""
               class="panel panelM"
