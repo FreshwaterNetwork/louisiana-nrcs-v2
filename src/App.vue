@@ -75,6 +75,26 @@
         </template>
         <template v-slot:after>
           <!--MAP COMPONENT-->
+          <div v-if="!this.widgetVis">
+            <h4
+              style="margin: 15px auto 15px auto; display: block; width: fit-content"
+            >
+              Map Preview
+            </h4>
+            <p
+              style="margin: 15px auto 15px auto; display: block; width: fit-content"
+            >
+              Zoom, adjust, and pan around the map for the report screenshot.
+              Then, click the "Save Report" button.
+            </p>
+            <q-btn
+              style="margin: 15px auto 15px auto; display: block; width: fit-content"
+              class="q-ma-sm"
+              color="primary"
+              @click="startPdf()"
+              >Create Report</q-btn
+            >
+          </div>
           <the-map></the-map>
         </template>
       </q-splitter>
@@ -89,7 +109,7 @@ import ThePanelTabsVertcial from './components/UI/ThePanelTabsVertical.vue';
 import ThePrint from './components/AppTools/ThePrint.vue';
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
-// import htmlToPdfmake from 'html-to-pdfmake';
+import htmlToPdfmake from 'html-to-pdfmake';
 
 export default {
   name: 'App',
@@ -161,12 +181,6 @@ export default {
     startReport() {
       return this.$store.state.startReport;
     },
-    reportTotalTable() {
-      return this.$store.state.reportTotalTable;
-    },
-    reportCropTables() {
-      return this.$store.state.reportCropTables;
-    },
     totalNewLoadNit() {
       return this.$store.state.totalNewLoadNit;
     },
@@ -188,10 +202,29 @@ export default {
     mapPrintURI() {
       return this.$store.state.mapPrintURI;
     },
+    widgetVis: {
+      get() {
+        return this.$store.state.widgetVis;
+      },
+      set(value) {
+        this.$store.commit('updateWidgetVis', value);
+      },
+    },
+    reportCropTables() {
+      return this.$store.state.reportCropTables;
+    },
+    printMap: {
+      get() {
+        return this.$store.state.printMap;
+      },
+      set(value) {
+        this.$store.commit('updatePrintMap', value);
+      },
+    },
   },
   watch: {
     mapPrintURI() {
-      this.generatePdf();
+      this.generatePDF();
     },
   },
   mounted() {
@@ -223,7 +256,6 @@ export default {
       this.printMap = true;
     },
     async generatePDF() {
-      // Set the fonts for pdfmake
       pdfMake.vfs = pdfFonts.pdfMake.vfs;
 
       // Create HTML blocks
@@ -237,9 +269,14 @@ export default {
 
       // Pull in data
       let unitType = '';
-      let totalUnits = this.unitSelection.toString();
-      let cropTable;
-      console.log(cropTable);
+      let unitList = '';
+      this.unitSelection.forEach((unit) => {
+        if (unit) {
+          unitList += ', ' + unit[0];
+        }
+      });
+
+      unitList = unitList.substring(2);
 
       if (this.layerSelection === 'NRCS Resource Units') {
         unitType = 'Resource Units';
@@ -251,9 +288,90 @@ export default {
         unitType = 'Agricultural Field Units';
       }
 
-      // this.reportCropTables.forEach((table) => {
-      //   cropTable = htmlToPdfmake(table);
-      // });
+      let cropTable = '';
+
+      console.log(this.reportCropTables);
+
+      this.reportCropTables.forEach((i) => {
+        if (i.newNitr != '0') {
+          let bmpTable = '';
+          // console.log(i);
+          i.bmps.forEach((bmp) => {
+            // console.log(bmp);
+            if (bmp.toggled == true) {
+              if (!bmp.c) {
+                bmp.c = 'N/A';
+              }
+              if (!bmp.p) {
+                bmp.p = 'N/A';
+              }
+              if (!bmp.nit_em) {
+                bmp.nit_em = 'N/A';
+              }
+              if (!bmp.phos_em) {
+                bmp.phos_em = 'N/A';
+              }
+              if (
+                (bmp.area_percent = 0 || !bmp.area_percent) &&
+                bmp.type !== 'defined' &&
+                bmp.type !== 'exclusive'
+              ) {
+                bmp.area_percent = 100;
+              }
+              bmpTable +=
+                '<table style="margin-bottom: 20px"><tr><td colspan="8" style="background-color: 	#FBCEB1">' +
+                bmp.label +
+                '</td></tr><tr><td>Percent Applied</td><td>Nitrogen Efficiency</td><td>Phosphorus Efficiency</td><td>Sediment Efficiency</td><td>Nitrogen EMC</td><td>Phosphorus EMC</td><td>C</td><td>P</td></tr><tr><td>' +
+                bmp.area_percent +
+                '% </td><td>' +
+                bmp.nit +
+                '</td><td>' +
+                bmp.phos +
+                '</td><td>' +
+                bmp.sed +
+                '</td><td>' +
+                bmp.nit_em +
+                '</td><td>' +
+                bmp.phos_em +
+                '</td><td>' +
+                bmp.c +
+                '</td><td>' +
+                bmp.p +
+                '</td></tr></table>';
+            }
+          });
+          cropTable +=
+            '<p style="color: #6082B6; font-size: 20px" class="pdf-pagebreak-before"><strong>' +
+            i.label +
+            ': </strong></p><table><tr><th colspan="2">' +
+            i.acres +
+            ' acres </th><th colspan="2">Nitrogen</th><th colspan="2">Phosphorus</th><th colspan="2">Sediment</th></tr><tr><td colspan="2">Initial Load (MT/yr)</td><td colspan="2">' +
+            i.nitr +
+            '</td><td colspan="2">' +
+            i.phos +
+            '</td><td colspan="2">' +
+            i.sed +
+            '</td></tr><tr><td colspan="2">Reduced Load (MT/yr)</td><td colspan="2">' +
+            i.newNitr +
+            '</td><td colspan="2">' +
+            i.newPhos +
+            '</td><td colspan="2">' +
+            i.newSed +
+            '</td></tr><tr><td colspan="2">Reduction</td><td colspan="2">' +
+            i.nitrReducPercent +
+            '%</td><td colspan="2">' +
+            i.phosReducPercent +
+            '%</td><td colspan="2">' +
+            i.sedReducPercent +
+            '%</td></tr></table>' +
+            '<p style="color: #6082B6"><strong>' +
+            i.label +
+            ' BMPs: </strong></p>' +
+            bmpTable;
+        }
+      });
+
+      var finalCropTable = htmlToPdfmake(cropTable);
 
       // Create PDF template
       var docDefinition = {
@@ -273,41 +391,52 @@ export default {
         content: [
           {
             text: 'Louisiana - TNC Freshwater Network',
+            bold: true,
             style: ['header1', 'centerItem'],
             margin: [0, 0, 0, 20],
+            alignment: 'center',
           },
           {
-            text: [{ text: 'Selected Areas', style: 'boldItem' }],
+            text: unitType + ' Selected: ',
+            bold: true,
+            color: '#6082B6',
+            style: 'header2',
           },
           {
-            text: [{ text: unitType + ' Selected: ' + totalUnits }],
+            text: unitList,
+            margin: [0, 10, 0, 20],
           },
           {
-            text: [{ text: 'Total Nutrient Reduction:' }],
+            text: 'Total Nutrient Reduction:',
+            bold: true,
+            color: '#6082B6',
+            style: 'header2',
           },
           {
-            layout: 'lightHorizontalLines',
+            margin: [0, 10, 0, 20],
             table: {
               headerRows: 1,
-              widths: ['*', 'auto', 100, '*'],
+              widths: ['auto', 'auto', 'auto', 'auto'],
               body: [
                 [
-                  'All Load Sources - ' + this.totalCropArea,
+                  'All Load Sources - ' +
+                    this.totalCropArea.toFixed(0) +
+                    ' acres',
                   'Nitrogen',
                   'Phosphorus',
                   'Sediment',
                 ],
                 [
                   'Initial Load (MT/yr)',
-                  this.totalNitr,
-                  this.totalPhos,
-                  this.totalSed,
+                  this.totalNitr.toFixed(2),
+                  this.totalPhos.toFixed(2),
+                  this.totalSed.toFixed(2),
                 ],
                 [
                   'New Load (MT/yr)',
-                  this.totalNewLoadNit,
-                  this.totalNewLoadPhos,
-                  this.totalNewLoadSed,
+                  this.totalNewLoadNit.toFixed(2),
+                  this.totalNewLoadPhos.toFixed(2),
+                  this.totalNewLoadSed.toFixed(2),
                 ],
                 [
                   'Reduction',
@@ -319,18 +448,39 @@ export default {
             },
           },
           {
-            // Screenshot of map
-            image: this.mapPrintURI,
-            width: 500,
-            height: 500,
+            text: 'Map Overview:',
+            bold: true,
+            color: '#6082B6',
+            style: 'header2',
           },
-          // Crop load table per crop (if it has a BMP)
-          // cropTable
-          // ,
+          {
+            image: this.mapPrintURI,
+            alignment: 'center',
+            margin: [0, 10, 0, 20],
+          },
+          finalCropTable,
         ],
+        styles: {
+          header1: {
+            fontSize: 20,
+          },
+          header2: {
+            fontSize: 15,
+          },
+          header3: {
+            fontSize: 10,
+          },
+        },
+        pageBreakBefore: function(currentNode) {
+          return (
+            currentNode.style &&
+            currentNode.style.indexOf('pdf-pagebreak-before') > -1
+          );
+        },
       };
-      console.log(docDefinition);
-      // pdfMake.createPdf(docDefinition).download();
+      pdfMake.createPdf(docDefinition).download();
+      this.widgetVis = true;
+      document.getElementById('map').classList.remove('report-map');
     },
   },
   updateAvailable(event) {

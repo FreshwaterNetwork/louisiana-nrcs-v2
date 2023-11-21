@@ -8,10 +8,9 @@
     label="Select Best Management Practice(s)"
     options-dense
     popup-content-style="margin-left: 30px"
-    style="margin: 0 10px 0 10px;"
-    counter
+    style="margin: 0 10px 0 10px"
     option-disable="disable"
-    @update:model-value="$emit(method)"
+    @update:model-value="startBuild(model, crop)"
   >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
@@ -24,16 +23,16 @@
     </template>
   </q-select>
 
-  <div :id="crop.label" style="margin: 10px"></div>
+  <!-- <div :id="crop.label" style="margin: 10px"></div> -->
 
   <div v-for="bmp in model" :key="bmp">
     <bmp-full-component
       :bmp="bmp"
       remove="remove-bmp"
       v-if="bmp.style === crop.label"
-      @remove-bmp="removeBmp(bmp, crop)"
+      @remove-bmp="removeBmp([bmp, crop])"
       toggle="toggle-bmp"
-      @toggle-bmp="toggleBmp(bmp, crop)"
+      @toggle-bmp="toggleBmp([bmp, crop])"
     ></bmp-full-component>
   </div>
 </template>
@@ -671,19 +670,194 @@ export default {
       ],
     };
   },
-  //   props: ['crop', 'method'],
+  computed: {
+    bmpSelect: {
+      get() {
+        return this.$store.state.bmpSelect;
+      },
+      set(value) {
+        this.$store.commit('updateBmpSelect', value);
+      },
+    },
+    lastBmp: {
+      get() {
+        return this.$store.state.lastBmp;
+      },
+      set(value) {
+        this.$store.commit('updateLastBmp', value);
+      },
+    },
+    totalNewLoadNit: {
+      get() {
+        return this.$store.state.totalNewLoadNit;
+      },
+      set(value) {
+        this.$store.commit('updateTotalNewLoadNit', value);
+      },
+    },
+    totalNewLoadPhos: {
+      get() {
+        return this.$store.state.totalNewLoadPhos;
+      },
+      set(value) {
+        this.$store.commit('updateTotalNewLoadPhos', value);
+      },
+    },
+    totalNewLoadSed: {
+      get() {
+        return this.$store.state.totalNewLoadSed;
+      },
+      set(value) {
+        this.$store.commit('updateTotalNewLoadSed', value);
+      },
+    },
+    totalReducedPercentNit: {
+      get() {
+        return this.$store.state.totalReducedPercentNit;
+      },
+      set(value) {
+        this.$store.commit('updateTotalReducedPercentNit', value);
+      },
+    },
+    totalReducedPercentPhos: {
+      get() {
+        return this.$store.state.totalReducedPercentPhos;
+      },
+      set(value) {
+        this.$store.commit('updateTotalReducedPercentPhos', value);
+      },
+    },
+    totalReducedPercentSed: {
+      get() {
+        return this.$store.state.totalReducedPercentSed;
+      },
+      set(value) {
+        this.$store.commit('updateTotalReducedPercentSed', value);
+      },
+    },
+    printMap() {
+      return this.$store.state.printMap;
+    },
+    initLoadData() {
+      return this.$store.state.initLoadData;
+    },
+    reportCropTables: {
+      get() {
+        return this.$store.state.reportCropTables;
+      },
+      set(value) {
+        this.$store.commit('updateReportCropTables', value);
+      },
+    },
+  },
   props: {
-    method: { type: String },
     crop: { type: Object },
   },
-  //   emits: ['method'],
   components: { bmpFullComponent },
   methods: {
-    removeBmp(bmp, crop) {
-      this.$emit('removeBmp', [bmp, crop]);
+    removeBmp(array) {
+      let num = -1;
+      const val = array[0];
+      const crop = array[1];
+
+      console.log(val);
+      console.log(crop);
+      console.log(this.bmpOptions);
+
+      this.bmpOptions.forEach((a) => {
+        // if (val.type == 'full') {
+        //   if (a.type !== 'title') {
+        //     a.disable = false;
+        //   }
+        // } else if (val.type == 'defined') {
+        //   if (a.type == 'full' || a.type == 'defined') {
+        //     if (a.type !== 'title') {
+        //       a.disable = false;
+        //     }
+        //   }
+        // } else if (
+        //   this.lastBMP.type == 'exclusive' ||
+        //   this.lastBMP.type == 'overlapping'
+        // ) {
+        //   if (a.disable == true) {
+        //     a.disable = true;
+        //   } else if (a.disable == false) {
+        //     a.disable == false;
+        //   }
+        // }
+        if (val == a) {
+          a.disable = false;
+        }
+      });
+
+      this.bmpSelect.forEach((bmp, index) => {
+        if (bmp.value == val.value) {
+          num = index;
+          bmp.toggled = false;
+        }
+        bmp.disable = false;
+      });
+      this.bmpSelect.splice(num, 1);
+
+      crop.bmpLength = this.bmpSelect.length;
+
+      this.$store.dispatch('buildNrcsStore', [this.bmpSelect, crop]);
+
+      this.toggledOff = !this.toggledOff;
     },
-    toggleBmp(bmp, crop) {
-      this.$emit('toggleBmp', [bmp, crop]);
+    toggleBmp(array) {
+      const val = array[0];
+      const crop = array[1];
+      let toggledBmps = [];
+
+      this.toggledOff = !this.toggledOff;
+
+      if (val.toggled == false) {
+        val.toggled = true;
+      } else if (val.toggled == true) {
+        val.toggled = false;
+      }
+
+      this.bmpSelect.forEach((bmp) => {
+        if (bmp.toggled == true) {
+          toggledBmps.push(bmp);
+        }
+      });
+
+      this.$store.dispatch('buildNrcsStore', [toggledBmps, crop]);
+    },
+    startBuild(val, crop) {
+      this.bmpSelect = val;
+      crop.bmpLength = this.bmpSelect.length;
+
+      this.$store.dispatch('buildNrcsStore', [this.bmpSelect, crop]);
+    },
+  },
+  watch: {
+    bmpSelect() {
+      this.bmpOptions.forEach((a) => {
+        if (this.lastBmp.label == a.label) {
+          a.disable = true;
+        }
+        if (this.lastBmp.type == 'full') {
+          a.disable = true;
+        } else if (this.lastBmp.type == 'defined') {
+          if (a.type == 'full' || a.type == 'defined') {
+            a.disable = true;
+          }
+        } else if (
+          this.lastBmp.type == 'exclusive' ||
+          this.lastBmp.type == 'overlapping'
+        ) {
+          if (a.disable == true) {
+            a.disable = true;
+          } else if (a.disable == false) {
+            a.disable == false;
+          }
+        }
+      });
+
+      this.lastBmp = {};
     },
   },
 };

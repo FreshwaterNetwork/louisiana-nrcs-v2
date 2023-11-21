@@ -3,6 +3,7 @@
     :class="bmp.label"
     class="bmp-container"
     :style="bmp.toggled == false ? '' : 'background-color: #DCEFFB'"
+    style="margin-top: 10px"
   >
     <q-card-section class="bmp-content">
       <div class="bmp-title">
@@ -166,14 +167,34 @@ export default {
         this.$store.commit('updateAreaApplied', value);
       },
     },
+    bmpSelect: {
+      get() {
+        return this.$store.state.bmpSelect;
+      },
+      set(value) {
+        this.$store.commit('updateBmpSelect', value);
+      },
+    },
   },
   methods: {
     newArea(val) {
       this.areaChanged = !this.areaChanged;
       let a = document.getElementById('area-apply');
       this.bmpAltered = val;
+      this.bmpAltered.style = this.$store.state.setBuildNrcsStore.lastCrop.label;
       this.bmpAltered.area_percent = parseInt(a.value);
       this.areaApplied = parseInt(a.value);
+
+      this.bmpSelect.forEach((a, i) => {
+        if (a.label === this.bmpAltered.label) {
+          this.bmpSelect[i] = this.bmpAltered;
+        }
+      });
+
+      this.$store.dispatch('buildNrcsStore', [
+        this.bmpSelect,
+        this.$store.state.setBuildNrcsStore.lastCrop,
+      ]);
     },
   },
 };

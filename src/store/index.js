@@ -1,6 +1,6 @@
 import { createStore } from 'vuex';
 import esriRequest from '@arcgis/core/request';
-import calculateStore from './calculateStore';
+import setBuildNrcsStore from './modules/setBuildNrcsStore';
 
 export default createStore({
   state: {
@@ -111,6 +111,12 @@ export default createStore({
     areaChanged: false,
     bmpAltered: {},
     areaApplied: 0,
+    bmpSelect: [],
+    lastBmp: {},
+    highlighted: [],
+    cropRows: [],
+    widgetVis: true,
+    totalSelectBmps: [],
   },
   mutations: {
     //data retrieved from web services
@@ -242,6 +248,24 @@ export default createStore({
     updateAreaApplied(state, val) {
       state.areaApplied = val;
     },
+    updateBmpSelect(state, val) {
+      state.bmpSelect = val;
+    },
+    updateLastBmp(state, val) {
+      state.lastBmp = val;
+    },
+    updateHighlighted(state, val) {
+      state.highlighted = val;
+    },
+    updateCropRows(state, val) {
+      state.cropRows = val;
+    },
+    updateWidgetVis(state, val) {
+      state.widgetVis = val;
+    },
+    updateTotalSelectBmps(state, val) {
+      state.totalSelectBmps = val;
+    },
   },
 
   actions: {
@@ -252,7 +276,7 @@ export default createStore({
         let smnum = context.state.config.supportingMapLayers.length;
         let smcount = 0;
         context.state.config.supportingMapLayers.forEach((service, index) => {
-          console.log(service);
+          // console.log(service);
           esriRequest(service.mapService + '/layers?f=pjson', {
             responseType: 'json',
           }).then(function(response) {
@@ -374,6 +398,6 @@ export default createStore({
   },
 
   modules: {
-    calculateStore,
+    setBuildNrcsStore,
   },
 });

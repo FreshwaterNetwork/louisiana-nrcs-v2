@@ -3,32 +3,6 @@
     <div id="supportingLayers" v-if="$store.state.config.supportingLayersOnMap">
       <SupportingLayers displayClass="supportingLayersMap" />
     </div>
-    <button
-      id="printBtn"
-      class="esri-widget--button esri-interactive esri-icon-printer esriCustomButton"
-      title="Print Map"
-      @click="getMapPrint()"
-    ></button>
-    <div id="toolbarDiv" class="">
-      <button
-        id="distance"
-        class="esri-widget--button esri-interactive esri-icon-measure-line esriCustomButton"
-        title="Distance Measurement Tool"
-        @click="activateLineMeasurement()"
-      ></button>
-      <button
-        id="area"
-        class="esri-widget--button esri-interactive esri-icon-measure-area esriCustomButton"
-        title="Area Measurement Tool"
-        @click="activateAreaMeasurement()"
-      ></button>
-      <button
-        id="clear"
-        class="esri-widget--button esri-interactive esri-icon-trash esriCustomButton"
-        title="Clear Measurements"
-        @click="clearMeasurements()"
-      ></button>
-    </div>
   </div>
 </template>
 
@@ -73,7 +47,6 @@ export default {
       laruID: 0,
       fID: 0,
       groupedObjects: [],
-      highlighted: [],
     };
   },
   computed: {
@@ -225,6 +198,36 @@ export default {
         this.$store.commit('updateInitLoadData', value);
       },
     },
+    highlighted: {
+      get() {
+        return this.$store.state.highlighted;
+      },
+      set(value) {
+        this.$store.commit('updateHighlighted', value);
+      },
+    },
+    cropRows: {
+      get() {
+        return this.$store.state.cropRows;
+      },
+      set(value) {
+        this.$store.commit('updateCropRows', value);
+      },
+    },
+    widgetVis() {
+      return this.$store.state.widgetVis;
+    },
+    reportCropTables: {
+      get() {
+        return this.$store.state.reportCropTables;
+      },
+      set(value) {
+        this.$store.commit('updateReportCropTables', value);
+      },
+    },
+    totalSelectBmps() {
+      return this.$store.state.totalSelectBmps;
+    },
   },
   watch: {
     supportingMapVisibleLayers() {
@@ -237,6 +240,41 @@ export default {
       if (this.printMap) {
         this.getMapPrint();
       }
+
+      this.initLoadData.forEach((obj) => {
+        this.totalSelectBmps.forEach((bmp) => {
+          if (bmp.style === obj.label) {
+            if (obj.bmps.includes(bmp) == false) {
+              obj.bmps.push(bmp);
+            }
+          }
+        });
+      });
+
+      this.reportCropTables = this.initLoadData;
+    },
+    widgetVis() {
+      if (!this.widgetVis) {
+        this.hideWidgets();
+      } else {
+        this.showWidgets();
+      }
+    },
+    highlighted: {
+      deep: true,
+      handler() {
+        esri.highlightUnit?.remove();
+
+        if (this.layerSelection === 'NRCS Resource Units') {
+          esri.highlightUnit = esri.nrcsLayerView.highlight(this.highlighted);
+        } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+          esri.highlightUnit = esri.hucLayerView.highlight(this.highlighted);
+        } else if (this.layerSelection === 'Catchments') {
+          esri.highlightUnit = esri.catchLayerView.highlight(this.highlighted);
+        } else if (this.layerSelection === 'Field Boundaries') {
+          esri.highlightUnit = esri.fieldLayerView.highlight(this.highlighted);
+        }
+      },
     },
   },
 
@@ -263,10 +301,10 @@ export default {
       l.when(function() {
         //create sublayer list
         let sublayerList = [];
-        let layer = esri.map.layers.items.find((layer) => {
-          return layer.type == 'map-image' && layer.url == service.mapService;
-        });
-        console.log(layer); //todo figure out why layer.sublayers is not working
+        // let layer = esri.map.layers.items.find((layer) => {
+        //   return layer.type == 'map-image' && layer.url == service.mapService;
+        // });
+        // console.log(layer)
 
         l.allSublayers.items.forEach((sublayer) => {
           //see if popup template recrod exists...
@@ -291,7 +329,6 @@ export default {
               opacity: 1,
               popupTemplate: template,
             });
-            console.log(sublayer.id, layerConfig.fields);
           }
           //if there is no popup push without a template
           else {
@@ -309,6 +346,7 @@ export default {
     esri.mapImage = new MapImageLayer({
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer',
+      title: '',
       sublayers: [
         {
           id: 0,
@@ -362,15 +400,16 @@ export default {
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/2',
       visible: false,
+      title: 'Scale - Resource Units',
       opacity: 0.8,
       outFields: ['LARU'],
     });
 
     esri.map.add(nrcs);
 
-    let nrcsLayerView = '';
+    esri.nrcsLayerView = '';
     esri.mapView.whenLayerView(nrcs).then(function(layerView) {
-      nrcsLayerView = layerView;
+      esri.nrcsLayerView = layerView;
     });
 
     //
@@ -379,6 +418,7 @@ export default {
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/1',
       visible: false,
+      title: 'Scale - HUC 12',
       opacity: 0.8,
 
       outFields: ['HUC_12'],
@@ -386,15 +426,16 @@ export default {
 
     esri.map.add(huc);
 
-    let hucLayerView = '';
+    esri.hucLayerView = '';
     esri.mapView.whenLayerView(huc).then(function(layerView) {
-      hucLayerView = layerView;
+      esri.hucLayerView = layerView;
     });
 
     const catchments = new FeatureLayer({
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/0',
       visible: false,
+      title: 'Scale - Catchments',
       opacity: 0.8,
 
       outFields: ['Catchment_ID'],
@@ -402,15 +443,16 @@ export default {
 
     esri.map.add(catchments);
 
-    let catchLayerView = '';
+    esri.catchLayerView = '';
     esri.mapView.whenLayerView(catchments).then(function(layerView) {
-      catchLayerView = layerView;
+      esri.catchLayerView = layerView;
     });
 
     const field = new FeatureLayer({
       url:
         'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/3',
       visible: false,
+      title: 'Scale - Agricultural Fields',
       opacity: 0.8,
 
       outFields: ['fid'],
@@ -418,9 +460,9 @@ export default {
 
     esri.map.add(field);
 
-    let fieldLayerView = '';
+    esri.fieldLayerView = '';
     esri.mapView.whenLayerView(field).then(function(layerView) {
-      fieldLayerView = layerView;
+      esri.fieldLayerView = layerView;
     });
 
     // Tables
@@ -448,21 +490,21 @@ export default {
       outFields: ['*'],
     });
 
-    console.log(table1, table2, table3, table4);
+    // console.log(table1, table2, table3, table4);
 
     // Reference layer selection logic
     this.$watch('referenceSelection', () => {
-      console.log('reference layer changed');
+      // console.log('reference layer changed');
       esri.mapImage.sublayers.forEach((sub) => {
-        console.log(sub.id);
+        // console.log(sub.id);
         if (sub.id === 4 || sub.id === 5 || sub.id === 6) {
-          console.log(sub);
+          // console.log(sub);
           let layerTitle = sub.title;
-          console.log(this.referenceSelection);
+          // console.log(this.referenceSelection);
 
           if (this.referenceSelection === layerTitle) {
             sub.visible = true;
-            console.log(sub);
+            // console.log(sub);
           } else if (this.referenceSelection !== layerTitle) {
             sub.visible = false;
           }
@@ -474,8 +516,8 @@ export default {
 
     // Scale layer selection logic
     this.$watch('layerSelection', () => {
-      if (highlightUnit) {
-        highlightUnit.remove();
+      if (esri.highlightUnit) {
+        esri.highlightUnit.remove();
       }
 
       this.units.forEach((unit) => {
@@ -507,14 +549,13 @@ export default {
       }
 
       laySelect = this.layerSelection;
-
-      console.log(this.layerSelection);
     });
 
     let _this = this;
-    let highlightUnit;
+    esri.highlightUnit;
 
     // Click event listener to build selected units list and crop lists
+
     this.unitClick = esri.mapView.on('click', function(response) {
       if (_this.mngmtVis == false) {
         let point = new Point({
@@ -528,30 +569,30 @@ export default {
           queryNRCS.outFields = ['*'];
 
           nrcs.queryFeatures(queryNRCS).then(function(result) {
-            let feature = result.features[0];
-            _this.laruID = feature.attributes.LARU;
+            if (result) {
+              let feature = result.features[0];
+              _this.laruID = feature.attributes.LARU;
 
-            if (_this.units.includes(_this.laruID) == false) {
-              _this.units.push(_this.laruID);
+              let selected = [_this.laruID, feature.attributes['OBJECTID']];
 
-              _this.highlighted.push([
-                feature.attributes['OBJECTID'],
-                _this.laruID,
-              ]);
+              // Check if new unit has already been selected
+              let exists = _this.units.some(
+                (arr) => arr[0] === selected[0] && arr[1] === selected[1]
+              );
 
-              console.log(_this.units);
+              if (!exists) {
+                _this.units.push(selected);
+              }
+
+              _this.unitLength = _this.units.length;
+
+              let tempHL = [];
+              _this.highlighted.forEach((i) => {
+                tempHL.push(i);
+              });
+              tempHL.push(feature.attributes['OBJECTID']);
+              _this.highlighted = tempHL;
             }
-
-            _this.unitLength = _this.units.length;
-
-            highlightUnit = nrcsLayerView.highlight(
-              feature.attributes['OBJECTID']
-            );
-
-            console.log(nrcs);
-            console.log(esri.map);
-            console.log(highlightUnit);
-            console.log(nrcsLayerView);
           });
         } else if (laySelect === '12-Digit Hydrologic Units') {
           const queryHuc = huc.createQuery(point);
@@ -559,23 +600,31 @@ export default {
           queryHuc.outFields = ['*'];
 
           huc.queryFeatures(queryHuc).then(function(result) {
-            let feature = result.features[0];
-            _this.hucID = feature.attributes.HUC_12;
+            if (result) {
+              console.log(result);
+              let feature = result.features[0];
+              _this.hucID = feature.attributes.HUC_12;
 
-            if (_this.units.includes(_this.hucID) == false) {
-              _this.units.push(_this.hucID);
+              let selected = [_this.hucID, feature.attributes['OBJECTID']];
 
-              _this.highlighted.push([
-                feature.attributes['OBJECTID'],
-                _this.hucID,
-              ]);
+              // Check if new unit has already been selected
+              let exists = _this.units.some(
+                (arr) => arr[0] === selected[0] && arr[1] === selected[1]
+              );
+
+              if (!exists) {
+                _this.units.push(selected);
+              }
+
+              _this.unitLength = _this.units.length;
+
+              let tempHL = [];
+              _this.highlighted.forEach((i) => {
+                tempHL.push(i);
+              });
+              tempHL.push(feature.attributes['OBJECTID']);
+              _this.highlighted = tempHL;
             }
-
-            _this.unitLength = _this.units.length;
-
-            highlightUnit = hucLayerView.highlight(
-              feature.attributes['OBJECTID']
-            );
           });
         } else if (laySelect === 'Catchments') {
           const queryCatch = catchments.createQuery(point);
@@ -583,23 +632,30 @@ export default {
           queryCatch.outFields = ['*'];
 
           catchments.queryFeatures(queryCatch).then(function(result) {
-            let feature = result.features[0];
-            _this.catchID = feature.attributes.Catchment_ID;
+            if (result) {
+              let feature = result.features[0];
+              _this.catchID = feature.attributes.Catchment_ID;
 
-            if (_this.units.includes(_this.catchID) == false) {
-              _this.units.push(_this.catchID);
+              let selected = [_this.catchID, feature.attributes['OBJECTID']];
 
-              _this.highlighted.push([
-                feature.attributes['OBJECTID'],
-                _this.catchID,
-              ]);
+              // Check if new unit has already been selected
+              let exists = _this.units.some(
+                (arr) => arr[0] === selected[0] && arr[1] === selected[1]
+              );
+
+              if (!exists) {
+                _this.units.push(selected);
+              }
+
+              _this.unitLength = _this.units.length;
+
+              let tempHL = [];
+              _this.highlighted.forEach((i) => {
+                tempHL.push(i);
+              });
+              tempHL.push(feature.attributes['OBJECTID']);
+              _this.highlighted = tempHL;
             }
-
-            _this.unitLength = _this.units.length;
-
-            highlightUnit = catchLayerView.highlight(
-              feature.attributes['OBJECTID']
-            );
           });
         } else if (laySelect === 'Field Boundaries') {
           const queryField = field.createQuery(point);
@@ -607,75 +663,36 @@ export default {
           queryField.outFields = ['*'];
 
           field.queryFeatures(queryField).then(function(result) {
-            let feature = result.features[0];
-            _this.fID = feature.attributes.fid;
+            if (result) {
+              let feature = result.features[0];
+              _this.fID = feature.attributes.fid;
 
-            if (_this.units.includes(_this.fID) == false) {
-              _this.units.push(_this.fID);
+              let selected = [_this.fID, feature.attributes['OBJECTID']];
 
-              _this.highlighted.push([
-                feature.attributes['OBJECTID'],
-                _this.fID,
-              ]);
+              // Check if new unit has already been selected
+              let exists = _this.units.some(
+                (arr) => arr[0] === selected[0] && arr[1] === selected[1]
+              );
+
+              if (!exists) {
+                _this.units.push(selected);
+              }
+
+              _this.unitLength = _this.units.length;
+
+              let tempHL = [];
+              _this.highlighted.forEach((i) => {
+                tempHL.push(i);
+              });
+              tempHL.push(feature.attributes['OBJECTID']);
+              _this.highlighted = tempHL;
             }
-
-            _this.unitLength = _this.units.length;
-
-            highlightUnit = fieldLayerView.highlight(
-              feature.attributes['OBJECTID']
-            );
           });
         }
 
         _this.unitSelection = _this.units;
+        // console.log(_this.highlighted);
       }
-    });
-
-    // let unitChip = document.getElementById('unit-chip');
-
-    // unitChip.on('click', function() {
-    //   console.log(unitChip);
-    // });
-
-    _this.$watch('unitIndex', () => {
-      let layer;
-
-      if (this.layerSelection === 'NRCS Resource Units') {
-        layer = nrcsLayerView;
-      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
-        layer = hucLayerView;
-      } else if (this.layerSelection === 'Catchments') {
-        layer = catchLayerView;
-      } else if (this.layerSelection === 'Field Boundaries') {
-        layer = fieldLayerView;
-      }
-      _this.unitSelection.forEach((unit, index) => {
-        console.log(unit, index);
-        console.log(_this.unitIndex);
-        if (index === _this.unitIndex) {
-          console.log(unit);
-          console.log(_this.highlighted);
-          _this.highlighted.forEach((i, index) => {
-            console.log(i);
-            layer._highlightIds.forEach((a, key) => {
-              if (i[1] === unit && i[0] === key) {
-                console.log(layer._highlightIds);
-                console.log(a);
-
-                layer._highlightIds.delete(i[0]);
-
-                _this.highlighted.splice(index);
-
-                console.log(layer._highlightIds);
-                _this.unitIndex = null;
-              }
-            });
-          });
-          console.log(_this.highlighted);
-        }
-      });
-
-      console.log(_this.unitIndex);
     });
 
     // Query tables
@@ -688,11 +705,9 @@ export default {
         const query4 = table4.createQuery();
 
         if (laySelect === 'NRCS Resource Units') {
-          console.log(laySelect);
-
           _this.units.forEach((unit) => {
-            if (unit != 0) {
-              _this.laruID = unit;
+            if (unit[0] != 0) {
+              _this.laruID = unit[0];
             }
           });
 
@@ -703,11 +718,7 @@ export default {
 
           table1.queryFeatures(query1).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -729,6 +740,7 @@ export default {
                   nitrReducPercent: 0,
                   phosReducPercent: 0,
                   sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.resourceUnits.push(i);
@@ -738,11 +750,7 @@ export default {
 
           table2.queryFeatures(query2).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -764,6 +772,7 @@ export default {
                   nitrReducPercent: 0,
                   phosReducPercent: 0,
                   sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.resourceUnits.push(i);
@@ -773,11 +782,7 @@ export default {
 
           table3.queryFeatures(query3).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -799,6 +804,7 @@ export default {
                   nitrReducPercent: 0,
                   phosReducPercent: 0,
                   sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.resourceUnits.push(i);
@@ -808,11 +814,7 @@ export default {
 
           table4.queryFeatures(query4).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -834,18 +836,19 @@ export default {
                   nitrReducPercent: 0,
                   phosReducPercent: 0,
                   sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.resourceUnits.push(i);
               });
             }
           });
-        } else if (laySelect === '12-Digit Hydrologic Units') {
-          console.log(laySelect);
 
+          // console.log(_this.resourceUnits);
+        } else if (laySelect === '12-Digit Hydrologic Units') {
           _this.units.forEach((unit) => {
-            if (unit != 0) {
-              _this.hucID = unit;
+            if (unit[0] != 0) {
+              _this.hucID = unit[0];
             }
           });
 
@@ -856,11 +859,7 @@ export default {
 
           table1.queryFeatures(query1).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -869,17 +868,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.hucUnits.push(i);
@@ -889,11 +891,7 @@ export default {
 
           table2.queryFeatures(query2).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -902,17 +900,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.hucUnits.push(i);
@@ -922,11 +923,7 @@ export default {
 
           table3.queryFeatures(query3).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -935,17 +932,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.hucUnits.push(i);
@@ -953,15 +953,11 @@ export default {
             }
           });
 
-          console.log('table 4 query start');
+          // console.log('table 4 query start');
 
           table4.queryFeatures(query4).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -970,17 +966,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.hucUnits.push(i);
@@ -989,8 +988,8 @@ export default {
           });
         } else if (laySelect === 'Catchments') {
           _this.units.forEach((unit) => {
-            if (unit != 0) {
-              _this.catchID = unit;
+            if (unit[0] != 0) {
+              _this.catchID = unit[0];
             }
           });
 
@@ -1001,11 +1000,7 @@ export default {
 
           table1.queryFeatures(query1).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -1014,17 +1009,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.catchUnits.push(i);
@@ -1034,11 +1032,7 @@ export default {
 
           table2.queryFeatures(query2).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -1047,17 +1041,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.catchUnits.push(i);
@@ -1067,11 +1064,7 @@ export default {
 
           table3.queryFeatures(query3).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -1080,17 +1073,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.catchUnits.push(i);
@@ -1100,11 +1096,7 @@ export default {
 
           table4.queryFeatures(query4).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -1113,17 +1105,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.catchUnits.push(i);
@@ -1132,8 +1127,8 @@ export default {
           });
         } else if (laySelect === 'Field Boundaries') {
           _this.units.forEach((unit) => {
-            if (unit != 0) {
-              _this.fID = unit;
+            if (unit[0] != 0) {
+              _this.fID = unit[0];
             }
           });
 
@@ -1144,11 +1139,7 @@ export default {
 
           table1.queryFeatures(query1).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -1157,17 +1148,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.fieldUnits.push(i);
@@ -1177,11 +1171,7 @@ export default {
 
           table2.queryFeatures(query2).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -1190,17 +1180,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.fieldUnits.push(i);
@@ -1210,11 +1203,7 @@ export default {
 
           table3.queryFeatures(query3).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -1223,17 +1212,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.fieldUnits.push(i);
@@ -1243,11 +1235,7 @@ export default {
 
           table4.queryFeatures(query4).then(function(result) {
             _this.count = _this.count + 1;
-            console.log(_this.count);
             if (result) {
-              console.log(result);
-
-              console.log(result.features[0]);
               result.features.forEach((feat) => {
                 let i = {
                   label: feat.attributes.CropName,
@@ -1256,17 +1244,20 @@ export default {
                   phos: feat.attributes.orig_phos_load,
                   sed: feat.attributes.orig_sed_load,
                   rFactor: feat.attributes.R_Factor_100ft_ton_in_acre_hr,
-                  k_factor: feat.attributes.Kffact,
+                  k_factor: feat.attributes.KffactF,
                   cls_factor: feat.attributes.Cls_factor,
                   runoff_in_yr: feat.attributes.Runoff_in_yr,
                   nit_emc_value: feat.attributes.Nitr_EMC,
                   phos_emc_value: feat.attributes.Phos_EMC,
                   c: feat.attributes.C,
                   p: feat.attributes.P,
-                  bmpSelect: [],
                   newNitr: 0,
                   newPhos: 0,
                   newSed: 0,
+                  nitrReducPercent: 0,
+                  phosReducPercent: 0,
+                  sedReducPercent: 0,
+                  bmps: [],
                 };
 
                 _this.fieldUnits.push(i);
@@ -1284,7 +1275,7 @@ export default {
     });
 
     _this.$watch('count', () => {
-      console.log(_this.count);
+      // console.log(_this.count);
       if (_this.count === 4) {
         _this.endLoading = true;
       } else {
@@ -1336,11 +1327,11 @@ export default {
     }
 
     //add scalebar widget
-    let scaleBar = new ScaleBar({
+    esri.scaleBar = new ScaleBar({
       view: esri.mapView,
       unit: 'dual',
     });
-    esri.mapView.ui.add(scaleBar, {
+    esri.mapView.ui.add(esri.scaleBar, {
       position: 'bottom-right',
     });
 
@@ -1434,7 +1425,7 @@ export default {
       this.supportingMapVisibleLayers.forEach((l) => {
         //if type is raster layer - find the sublayer and make visible
         if (l.type === 'Raster Layer') {
-          console.log(l);
+          // console.log(l);
           let layer = esri.map.layers.items.find((layer) => {
             return (
               layer.type == 'map-image' &&
@@ -1459,11 +1450,11 @@ export default {
           );
 
           if (i >= 0) {
-            console.log('finds feature layer');
+            // console.log('finds feature layer');
             esri.map.layers.items[i].visible = true;
           } else {
             //check to see if fl has a popup template defined
-            console.log('creates feature layer');
+            // console.log('creates feature layer');
             let layerList = this.$store.state.config.supportingMapLayers[
               l.mapServiceIndex
             ].popupTemplate;
@@ -1533,6 +1524,48 @@ export default {
       if (this.layerSelection === 'NRCS Resource Units') {
         this.resourceUnits.forEach((obj) => {
           const label = obj.label;
+          if (
+            !this.groupedObjects[label]
+            // && !nonCrop.includes(label)
+          ) {
+            this.groupedObjects[label] = {
+              label,
+              nitr: 0,
+              phos: 0,
+              sed: 0,
+              acres: 0,
+              newNitr: 0,
+              newPhos: 0,
+              newSed: 0,
+              nitrReducPercent: 0,
+              phosReducPercent: 0,
+              sedReducPercent: 0,
+              cropRows: [],
+              bmps: [],
+              bmpLength: 0,
+            };
+          }
+
+          if (this.groupedObjects[label]) {
+            this.groupedObjects[label]['cropRows'].push(obj);
+            this.groupedObjects[label].nitr += obj.nitr;
+            this.groupedObjects[label].phos += obj.phos;
+            this.groupedObjects[label].sed += obj.sed;
+            this.groupedObjects[label].acres += obj.cAcres;
+            this.groupedObjects[label].kFact = obj.k_factor;
+            this.groupedObjects[label].clsFactor = obj.cls_factor;
+            this.groupedObjects[label].runoff_year = obj.runoff_in_yr;
+          }
+        });
+
+        this.initLoadData = Object.values(this.groupedObjects);
+
+        this.initLoadData = this.initLoadData.sort(
+          ({ acres: a }, { acres: b }) => b - a
+        );
+      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+        this.hucUnits.forEach((obj) => {
+          const label = obj.label;
           if (!this.groupedObjects[label] && !nonCrop.includes(label)) {
             this.groupedObjects[label] = {
               label,
@@ -1546,266 +1579,106 @@ export default {
               nitrReducPercent: 0,
               phosReducPercent: 0,
               sedReducPercent: 0,
+              cropRows: [],
+              bmps: [],
             };
           }
 
           if (this.groupedObjects[label]) {
+            this.groupedObjects[label]['cropRows'].push(obj);
             this.groupedObjects[label].nitr += obj.nitr;
             this.groupedObjects[label].phos += obj.phos;
             this.groupedObjects[label].sed += obj.sed;
             this.groupedObjects[label].acres += obj.cAcres;
+            this.groupedObjects[label].kFact = obj.k_factor;
+            this.groupedObjects[label].clsFactor = obj.cls_factor;
+            this.groupedObjects[label].runoff_year = obj.runoff_in_yr;
           }
         });
 
         this.initLoadData = Object.values(this.groupedObjects);
 
-        // this.resourceUnits.forEach((i) => {
-        //   if (nonCrop.includes(i.label) == false) {
-        //     if (i.nitr) {
-        //       this.totalNitr += i.nitr;
-        //     }
-        //     if (i.phos) {
-        //       this.totalPhos += i.phos;
-        //     }
-        //     if (i.sed) {
-        //       this.totalSed += i.sed;
-        //     }
-        //     if (i.cAcres) {
-        //       this.totalCropArea += i.cAcres;
-        //     }
-        //   }
-        // });
-      } else if (this.layerSelection === '') {
-        console.log('not nrcs');
-      } else if (this.layerSelection === '') {
-        console.log('not nrcs');
-      } else if (this.layerSelection === '') {
-        console.log('not nrcs');
+        this.initLoadData = this.initLoadData.sort(
+          ({ acres: a }, { acres: b }) => b - a
+        );
+      } else if (this.layerSelection === 'Catchments') {
+        this.catchUnits.forEach((obj) => {
+          const label = obj.label;
+          if (!this.groupedObjects[label] && !nonCrop.includes(label)) {
+            this.groupedObjects[label] = {
+              label,
+              nitr: 0,
+              phos: 0,
+              sed: 0,
+              acres: 0,
+              newNitr: 0,
+              newPhos: 0,
+              newSed: 0,
+              nitrReducPercent: 0,
+              phosReducPercent: 0,
+              sedReducPercent: 0,
+              cropRows: [],
+              bmps: [],
+            };
+          }
+
+          if (this.groupedObjects[label]) {
+            this.groupedObjects[label]['cropRows'].push(obj);
+            this.groupedObjects[label].nitr += obj.nitr;
+            this.groupedObjects[label].phos += obj.phos;
+            this.groupedObjects[label].sed += obj.sed;
+            this.groupedObjects[label].acres += obj.cAcres;
+            this.groupedObjects[label].kFact = obj.k_factor;
+            this.groupedObjects[label].clsFactor = obj.cls_factor;
+            this.groupedObjects[label].runoff_year = obj.runoff_in_yr;
+          }
+        });
+
+        this.initLoadData = Object.values(this.groupedObjects);
+
+        this.initLoadData = this.initLoadData.sort(
+          ({ acres: a }, { acres: b }) => b - a
+        );
+      } else if (this.layerSelection === 'Field Boundaries') {
+        this.fieldUnits.forEach((obj) => {
+          const label = obj.label;
+          if (!this.groupedObjects[label] && !nonCrop.includes(label)) {
+            this.groupedObjects[label] = {
+              label,
+              nitr: 0,
+              phos: 0,
+              sed: 0,
+              acres: 0,
+              newNitr: 0,
+              newPhos: 0,
+              newSed: 0,
+              nitrReducPercent: 0,
+              phosReducPercent: 0,
+              sedReducPercent: 0,
+              cropRows: [],
+              bmps: [],
+            };
+          }
+
+          if (this.groupedObjects[label]) {
+            this.groupedObjects[label]['cropRows'].push(obj);
+            this.groupedObjects[label].nitr += obj.nitr;
+            this.groupedObjects[label].phos += obj.phos;
+            this.groupedObjects[label].sed += obj.sed;
+            this.groupedObjects[label].acres += obj.cAcres;
+            this.groupedObjects[label].kFact = obj.k_factor;
+            this.groupedObjects[label].clsFactor = obj.cls_factor;
+            this.groupedObjects[label].runoff_year = obj.runoff_in_yr;
+          }
+        });
+
+        this.initLoadData = Object.values(this.groupedObjects);
+
+        this.initLoadData = this.initLoadData.sort(
+          ({ acres: a }, { acres: b }) => b - a
+        );
       }
     },
-
-    // consolidateData() {
-    //   const nonCrop = [
-    //     'Background',
-    //     'Barren',
-    //     'Deciduous Forest',
-    //     'Evergreen Forest',
-    //     'Herbaceous Wetlands',
-    //     'Mixed Forest',
-    //     'Open Water',
-    //     'Shrubland',
-    //     'Woody Wetlands',
-    //     'Developed/Open Space',
-    //     'Developed/Med Intensity',
-    //     'Developed/Low Intensity',
-    //     'Developed/High Intensity',
-    //     'Aquaculture',
-    //   ];
-
-    //   if (this.layerSelection === 'NRCS Resource Units') {
-    //     this.resourceUnits.forEach((obj) => {
-    //       const label = obj.label;
-    //       if (!this.groupedObjects[label]) {
-    //         this.groupedObjects[label] = {
-    //           label,
-    //           cAcres: 0,
-    //           nitr: 0,
-    //           phos: 0,
-    //           sed: 0,
-    //           rFactor: 0,
-    //           k_factor: 0,
-    //           cls_factor: 0,
-    //           runoff_in_yr: 0,
-    //           nit_emc_value: 0,
-    //           phos_emc_value: 0,
-    //           c: 0,
-    //           p: 0,
-    //           newNitr: 0,
-    //           newPhos: 0,
-    //           newSed: 0,
-    //           nitrReducPercent: 0,
-    //           phosReducPercent: 0,
-    //           sedReducPercent: 0,
-    //         };
-    //       }
-    //       this.groupedObjects[label].cAcres += obj.cAcres;
-    //       this.groupedObjects[label].nitr += obj.nitr;
-    //       this.groupedObjects[label].phos += obj.phos;
-    //       this.groupedObjects[label].sed += obj.sed;
-    //       this.groupedObjects[label].rFactor = obj.rFactor;
-    //       this.groupedObjects[label].k_factor = obj.k_factor;
-    //       this.groupedObjects[label].cls_factor = obj.cls_factor;
-    //       this.groupedObjects[label].runoff_in_yr = obj.runoff_in_yr;
-    //       this.groupedObjects[label].nit_emc_value = obj.nit_emc_value;
-    //       this.groupedObjects[label].phos_emc_value = obj.phos_emc_value;
-    //       this.groupedObjects[label].c = obj.c;
-    //       this.groupedObjects[label].p = obj.p;
-    //       this.groupedObjects[label].newNitr += obj.newNitr;
-    //       this.groupedObjects[label].newPhos += obj.newPhos;
-    //       this.groupedObjects[label].newSed += obj.newSed;
-    //       this.groupedObjects[label].nitrReducPercent += obj.nitrReducPercent;
-    //       this.groupedObjects[label].phosReducPercent += obj.phosReducPercent;
-    //       this.groupedObjects[label].sedReducPercent += obj.sedReducPercent;
-    //     });
-
-    //     this.resourceUnits = Object.values(this.groupedObjects);
-
-    //     this.resourceUnits.forEach((i) => {
-    //       if (nonCrop.includes(i.label) == false) {
-    //         if (i.nitr) {
-    //           this.totalNitr += i.nitr;
-    //         }
-    //         if (i.phos) {
-    //           this.totalPhos += i.phos;
-    //         }
-    //         if (i.sed) {
-    //           this.totalSed += i.sed;
-    //         }
-    //         if (i.cAcres) {
-    //           this.totalCropArea += i.cAcres;
-    //           console.log(i.cAcres);
-    //         }
-    //       }
-    //     });
-    //   } else if (this.layerSelection === '12-Digit Hydrologic Units') {
-    //     this.hucUnits.forEach((obj) => {
-    //       const label = obj.label;
-    //       if (!this.groupedObjects[label]) {
-    //         this.groupedObjects[label] = {
-    //           label,
-    //           cAcres: 0,
-    //           nitr: 0,
-    //           phos: 0,
-    //           sed: 0,
-    //           bmpSelect: [],
-    //         };
-    //       }
-    //       this.groupedObjects[label].cAcres += obj.cAcres;
-    //       this.groupedObjects[label].nitr += obj.nitr;
-    //       this.groupedObjects[label].phos += obj.phos;
-    //       this.groupedObjects[label].sed += obj.sed;
-    //     });
-
-    //     this.hucUnits = Object.values(this.groupedObjects);
-
-    //     this.hucUnits.forEach((i) => {
-    //       if (nonCrop.includes(i.label) == false) {
-    //         if (i.nitr) {
-    //           this.totalNitr += i.nitr;
-    //           i.nitr = i.nitr.toFixed(2);
-    //         }
-    //         if (i.phos) {
-    //           this.totalPhos += i.phos;
-    //           i.phos = i.phos.toFixed(2);
-    //         }
-    //         if (i.sed) {
-    //           this.totalSed += i.sed;
-    //           i.sed = i.sed.toFixed(2);
-    //         }
-    //         if (i.cAcres) {
-    //           this.totalCropArea += i.cAcres;
-    //           console.log(i.cAcres);
-    //           i.cAcres = i.cAcres.toFixed(2);
-    //         }
-    //       }
-    //     });
-    //   } else if (this.layerSelection === 'Catchments') {
-    //     this.catchUnits.forEach((obj) => {
-    //       const label = obj.label;
-    //       if (!this.groupedObjects[label]) {
-    //         this.groupedObjects[label] = {
-    //           label,
-    //           cAcres: 0,
-    //           nitr: 0,
-    //           phos: 0,
-    //           sed: 0,
-    //           bmpSelect: [],
-    //         };
-    //       }
-    //       this.groupedObjects[label].cAcres += obj.cAcres;
-    //       this.groupedObjects[label].nitr += obj.nitr;
-    //       this.groupedObjects[label].phos += obj.phos;
-    //       this.groupedObjects[label].sed += obj.sed;
-    //     });
-
-    //     this.catchUnits = Object.values(this.groupedObjects);
-
-    //     this.catchUnits.forEach((i) => {
-    //       if (nonCrop.includes(i.label) == false) {
-    //         if (i.nitr) {
-    //           this.totalNitr += i.nitr;
-    //           i.nitr = i.nitr.toFixed(2);
-    //         }
-    //         if (i.phos) {
-    //           this.totalPhos += i.phos;
-    //           i.phos = i.phos.toFixed(2);
-    //         }
-    //         if (i.sed) {
-    //           this.totalSed += i.sed;
-    //           i.sed = i.sed.toFixed(2);
-    //         }
-    //         if (i.cAcres) {
-    //           this.totalCropArea += i.cAcres;
-    //           console.log(i.cAcres);
-    //           i.cAcres = i.cAcres.toFixed(2);
-    //         }
-    //       }
-    //     });
-    //   } else if (this.layerSelection === 'Field Boundaries') {
-    //     this.fieldUnits.forEach((obj) => {
-    //       const label = obj.label;
-    //       if (!this.groupedObjects[label]) {
-    //         this.groupedObjects[label] = {
-    //           label,
-    //           cAcres: 0,
-    //           nitr: 0,
-    //           phos: 0,
-    //           sed: 0,
-    //           bmpSelect: [],
-    //         };
-    //       }
-    //       this.groupedObjects[label].cAcres += obj.cAcres;
-    //       this.groupedObjects[label].nitr += obj.nitr;
-    //       this.groupedObjects[label].phos += obj.phos;
-    //       this.groupedObjects[label].sed += obj.sed;
-    //     });
-
-    //     this.fieldUnits = Object.values(this.groupedObjects);
-
-    //     this.fieldUnits.forEach((i) => {
-    //       if (nonCrop.includes(i.label) == false) {
-    //         if (i.nitr) {
-    //           this.totalNitr += i.nitr;
-    //           i.nitr = i.nitr.toFixed(2);
-    //         }
-    //         if (i.phos) {
-    //           this.totalPhos += i.phos;
-    //           i.phos = i.phos.toFixed(2);
-    //         }
-    //         if (i.sed) {
-    //           this.totalSed += i.sed;
-    //           i.sed = i.sed.toFixed(2);
-    //         }
-    //         if (i.cAcres) {
-    //           this.totalCropArea += i.cAcres;
-    //           console.log(i.cAcres);
-    //           i.cAcres = i.cAcres.toFixed(2);
-    //         }
-    //       }
-    //     });
-    //   }
-    // },
-
-    removeHighlight(/*featureId, layer*/) {
-      // const index = this.highlighted.indexOf(featureId);
-
-      console.log(this.highlighted);
-      // if (index == this.unitIndex) {
-      //   this.highlighted.splice(index, 1);
-      //   layer.removeHighlight(featureId);
-      // }
-    },
-
     updateSupportingOpacity() {
       let l = this.supportingVisibleLayerOpacity;
       // if it is a raster find the sublayer and set the opacity
@@ -1835,11 +1708,11 @@ export default {
         );
 
         if (i >= 0) {
-          console.log('finds feature layer');
+          // console.log('finds feature layer');
           esri.map.layers.items[i].opacity = l.value;
         } else {
           //check to see if fl has a popup template defined
-          console.log('creates feature layer');
+          // console.log('creates feature layer');
           let layerList = this.$store.state.config.supportingMapLayers[
             l.mapServiceIndex
           ].popupTemplate;
@@ -1891,17 +1764,12 @@ export default {
         }
       }
     },
-
     getMapPrint() {
       esri.mapView
-        .takeScreenshot({ width: 1000, height: 700 })
+        .takeScreenshot({ width: 500, height: 400 })
         .then((screenshot) => {
           let image = screenshot.dataUrl;
           this.$store.commit('updateMapPrintURI', image);
-          setTimeout(function() {
-            // wait until all resources loaded
-            window.print();
-          }, 250);
         });
     },
 
@@ -1929,6 +1797,14 @@ export default {
       areaButton.classList.remove('active');
       esri.measurement.clear();
     },
+    hideWidgets() {
+      esri.lgExpand.visible = false;
+      esri.scaleBar.visible = false;
+    },
+    showWidgets() {
+      esri.lgExpand.visible = true;
+      esri.scaleBar.visible = true;
+    },
   },
 };
 </script>
@@ -1952,6 +1828,12 @@ export default {
   width: 100%;
   position: relative;
   border-bottom: #999 solid 1pt;
+}
+.report-map {
+  margin-top: 50px;
+  min-height: unset !important;
+  height: 400px !important;
+  width: 500px !important;
 }
 
 @media screen and (max-width: 700px) {
