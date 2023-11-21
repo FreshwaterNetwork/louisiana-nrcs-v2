@@ -52,7 +52,7 @@ export default {
       }
       // close icon
       if (this.type === 'close') {
-        icon = 'fas fa-xmark';
+        icon = 'fas fa-times';
         size = '11pt';
         padding = '0px';
         tooltip = 'Close';

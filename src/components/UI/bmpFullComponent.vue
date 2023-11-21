@@ -20,13 +20,25 @@
           </tr>
           <tr>
             <td>
-              <input class="bmp-input" type="number" :value="bmp.nit" />
+              <input
+                class="bmp-input"
+                type="number"
+                :value="(bmp.nit * 100).toFixed(0)"
+              />
             </td>
             <td>
-              <input class="bmp-input" type="number" :value="bmp.phos" />
+              <input
+                class="bmp-input"
+                type="number"
+                :value="(bmp.phos * 100).toFixed(0)"
+              />
             </td>
             <td>
-              <input class="bmp-input" type="number" :value="bmp.sed" />
+              <input
+                class="bmp-input"
+                type="number"
+                :value="(bmp.sed * 100).toFixed(0)"
+              />
             </td>
           </tr>
         </div>
