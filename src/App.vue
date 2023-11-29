@@ -299,11 +299,11 @@ export default {
           i.bmps.forEach((bmp) => {
             // console.log(bmp);
             if (bmp.toggled == true) {
-              if (!bmp.c) {
-                bmp.c = 'N/A';
+              if (!bmp.cm_factor) {
+                bmp.cm_factor = 'N/A';
               }
-              if (!bmp.p) {
-                bmp.p = 'N/A';
+              if (!bmp.sp_factor) {
+                bmp.sp_factor = 'N/A';
               }
               if (!bmp.nit_em) {
                 bmp.nit_em = 'N/A';
@@ -334,9 +334,9 @@ export default {
                 '</td><td>' +
                 bmp.phos_em +
                 '</td><td>' +
-                bmp.c +
+                bmp.cm_factor +
                 '</td><td>' +
-                bmp.p +
+                bmp.sp_factor +
                 '</td></tr></table>';
             }
           });
@@ -344,13 +344,13 @@ export default {
             '<p style="color: #6082B6; font-size: 20px" class="pdf-pagebreak-before"><strong>' +
             i.label +
             ': </strong></p><table><tr><th colspan="2">' +
-            i.acres +
+            i.acres.toFixed(0) +
             ' acres </th><th colspan="2">Nitrogen</th><th colspan="2">Phosphorus</th><th colspan="2">Sediment</th></tr><tr><td colspan="2">Initial Load (MT/yr)</td><td colspan="2">' +
-            i.nitr +
+            i.nitr.toFixed(2) +
             '</td><td colspan="2">' +
-            i.phos +
+            i.phos.toFixed(2) +
             '</td><td colspan="2">' +
-            i.sed +
+            i.sed.toFixed(2) +
             '</td></tr><tr><td colspan="2">Reduced Load (MT/yr)</td><td colspan="2">' +
             i.newNitr +
             '</td><td colspan="2">' +

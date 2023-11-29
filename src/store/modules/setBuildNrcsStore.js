@@ -233,15 +233,23 @@ const actions = {
       let cropRows;
       let rpl_lsc = 0;
 
-      if (context.rootState.resourceUnits) {
-        cropRows = context.rootState.cropRows;
-      } else if (context.rootState.hucUnits) {
-        cropRows = context.rootState.hucUnits;
-      } else if (context.rootState.catchUnits) {
-        cropRows = context.rootState.catchUnits;
-      } else if (context.rootState.fieldUnits) {
-        cropRows = context.rootState.fieldUnits;
-      }
+      context.rootState.initLoadData.forEach((row) => {
+        if (row.label == context.state.cropLabel) {
+          cropRows = row.cropRows;
+        }
+      });
+
+      // console.log(context.rootState.initLoadData);
+
+      // if (context.rootState.resourceUnits) {
+      //   cropRows = context.rootState.initLoadData;
+      // } else if (context.rootState.hucUnits) {
+      //   cropRows = context.rootState.hucUnits;
+      // } else if (context.rootState.catchUnits) {
+      //   cropRows = context.rootState.catchUnits;
+      // } else if (context.rootState.fieldUnits) {
+      //   cropRows = context.rootState.fieldUnits;
+      // }
 
       cropRows.forEach((cropRow) => {
         if (context.state.cropLabel === cropRow.label) {
@@ -286,29 +294,35 @@ const actions = {
       let cropRows;
       let rpl_non_lsc = 0;
 
-      if (context.rootState.resourceUnits) {
-        cropRows = context.rootState.cropRows;
-      } else if (context.rootState.hucUnits) {
-        cropRows = context.rootState.hucUnits;
-      } else if (context.rootState.catchUnits) {
-        cropRows = context.rootState.catchUnits;
-      } else if (context.rootState.fieldUnits) {
-        cropRows = context.rootState.fieldUnits;
-      }
+      context.rootState.initLoadData.forEach((row) => {
+        if (row.label == context.state.cropLabel) {
+          cropRows = row.cropRows;
+        }
+      });
+
+      // if (context.rootState.resourceUnits) {
+      //   cropRows = context.rootState.initLoadData;
+      // } else if (context.rootState.hucUnits) {
+      //   cropRows = context.rootState.hucUnits;
+      // } else if (context.rootState.catchUnits) {
+      //   cropRows = context.rootState.catchUnits;
+      // } else if (context.rootState.fieldUnits) {
+      //   cropRows = context.rootState.fieldUnits;
+      // }
 
       cropRows.forEach((cropRow) => {
         if (context.state.cropLabel === cropRow.label) {
-          let r_factor_100_ton_acre = cropRow.cropRows.rFactor;
+          let r_factor_100_ton_acre = cropRow.rFactor;
           let k_factor = cropRow.k_factor;
           let cls_factor = cropRow.cls_factor;
-          let C = cropRow.cropRows.c;
-          let P = cropRow.cropRows.p;
+          let C = cropRow.c;
+          let P = cropRow.p;
 
           let emc_crop_value = 0;
           let eff_value = 0;
 
           let R = parseFloat(cropRow.runoff_in_yr);
-          let crop_area = cropRow.acres;
+          let crop_area = cropRow.cAcres;
 
           if (type === 'nit') {
             emc_crop_value = cropRow.nit_emc_value;
@@ -516,7 +530,8 @@ const actions = {
     }
 
     context.rootState.bmpAltered = {};
-    context.dispatch('calculateTotals', [val, crop]);
+    context.dispatch('calculateTotals');
+    // context.dispatch('calculateTotals', [val, crop]);
   },
 };
 

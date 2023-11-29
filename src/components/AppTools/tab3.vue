@@ -1246,6 +1246,7 @@ export default {
     },
     backButton() {
       this.mngmtVis = false;
+      this.loadingVis = false;
       this.count = 0;
       this.totalCropArea = 0;
       this.totalNitr = 0;
@@ -1256,7 +1257,7 @@ export default {
       this.hucUnits = [];
       this.catchUnits = [];
       this.fieldUnits = [];
-      this.totalCropArea = 0;
+      this.totalCropArea = parseFloat(0);
       this.totalNewLoadNit = 0;
       this.totalNewLoadPhos = 0;
       this.totalNewLoadSed = 0;
@@ -1279,11 +1280,31 @@ export default {
       this.highlighted = tempHL;
     },
     consolidateData() {
-      // const nonCrop = []
-
-      let consolidated = this.resourceUnits;
+      let consolidated;
 
       if (this.layerSelection === 'NRCS Resource Units') {
+        // consolidated = this.initLoadData;
+        consolidated = this.resourceUnits;
+        consolidated.forEach((obj) => {
+          const label = obj.label;
+          if (!this.groupedObjects[label]) {
+            this.groupedObjects[label] = {
+              label,
+              cAcres: 0,
+              nitr: 0,
+              phos: 0,
+              sed: 0,
+            };
+          }
+          this.groupedObjects[label].cAcres += obj.cAcres;
+          this.groupedObjects[label].nitr += obj.nitr;
+          this.groupedObjects[label].phos += obj.phos;
+          this.groupedObjects[label].sed += obj.sed;
+        });
+
+        consolidated = Object.values(this.groupedObjects);
+      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+        consolidated = this.hucUnits;
         consolidated.forEach((obj) => {
           const label = obj.label;
           if (!this.groupedObjects[label]) {
@@ -1331,84 +1352,23 @@ export default {
 
         consolidated = Object.values(this.groupedObjects);
 
-        consolidated.forEach((i) => {
-          if (i.nitr) {
-            this.totalNitr += parseFloat(i.nitr);
-          }
-          if (i.phos) {
-            this.totalPhos += parseFloat(i.phos);
-          }
-          if (i.sed) {
-            this.totalSed += parseFloat(i.sed);
-          }
-          if (i.cAcres) {
-            this.totalCropArea += parseFloat(i.cAcres);
-          }
-        });
-      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
-        this.hucUnits.forEach((obj) => {
-          const label = obj.label;
-          if (!this.groupedObjects[label]) {
-            this.groupedObjects[label] = {
-              label,
-              cAcres: 0,
-              nitr: 0,
-              phos: 0,
-              sed: 0,
-              rFactor: 0,
-              k_factor: 0,
-              cls_factor: 0,
-              runoff_in_yr: 0,
-              nit_emc_value: 0,
-              phos_emc_value: 0,
-              c: 0,
-              p: 0,
-              newNitr: 0,
-              newPhos: 0,
-              newSed: 0,
-              nitrReducPercent: 0,
-              phosReducPercent: 0,
-              sedReducPercent: 0,
-            };
-          }
-          this.groupedObjects[label].cAcres += obj.cAcres;
-          this.groupedObjects[label].nitr += obj.nitr;
-          this.groupedObjects[label].phos += obj.phos;
-          this.groupedObjects[label].sed += obj.sed;
-          this.groupedObjects[label].rFactor = obj.rFactor;
-          this.groupedObjects[label].k_factor = obj.k_factor;
-          this.groupedObjects[label].cls_factor = obj.cls_factor;
-          this.groupedObjects[label].runoff_in_yr = obj.runoff_in_yr;
-          this.groupedObjects[label].nit_emc_value = obj.nit_emc_value;
-          this.groupedObjects[label].phos_emc_value = obj.phos_emc_value;
-          this.groupedObjects[label].c = obj.c;
-          this.groupedObjects[label].p = obj.p;
-          this.groupedObjects[label].newNitr += obj.newNitr;
-          this.groupedObjects[label].newPhos += obj.newPhos;
-          this.groupedObjects[label].newSed += obj.newSed;
-          this.groupedObjects[label].nitrReducPercent += obj.nitrReducPercent;
-          this.groupedObjects[label].phosReducPercent += obj.phosReducPercent;
-          this.groupedObjects[label].sedReducPercent += obj.sedReducPercent;
-        });
-
-        this.hucUnits = Object.values(this.groupedObjects);
-
-        this.hucUnits.forEach((i) => {
-          if (i.nitr) {
-            this.totalNitr += parseFloat(i.nitr);
-          }
-          if (i.phos) {
-            this.totalPhos += parseFloat(i.phos);
-          }
-          if (i.sed) {
-            this.totalSed += parseFloat(i.sed);
-          }
-          if (i.cAcres) {
-            this.totalCropArea += parseFloat(i.cAcres);
-          }
-        });
+        // consolidated.forEach((i) => {
+        //   if (i.nitr) {
+        //     this.totalNitr += parseFloat(i.nitr);
+        //   }
+        //   if (i.phos) {
+        //     this.totalPhos += parseFloat(i.phos);
+        //   }
+        //   if (i.sed) {
+        //     this.totalSed += parseFloat(i.sed);
+        //   }
+        //   if (i.cAcres) {
+        //     this.totalCropArea += parseFloat(i.cAcres);
+        //   }
+        // });
       } else if (this.layerSelection === 'Catchments') {
-        this.catchUnits.forEach((obj) => {
+        consolidated = this.catchUnits;
+        consolidated.forEach((obj) => {
           const label = obj.label;
           if (!this.groupedObjects[label]) {
             this.groupedObjects[label] = {
@@ -1453,24 +1413,25 @@ export default {
           this.groupedObjects[label].sedReducPercent += obj.sedReducPercent;
         });
 
-        this.catchUnits = Object.values(this.groupedObjects);
+        consolidated = Object.values(this.groupedObjects);
 
-        this.catchUnits.forEach((i) => {
-          if (i.nitr) {
-            this.totalNitr += parseFloat(i.nitr);
-          }
-          if (i.phos) {
-            this.totalPhos += parseFloat(i.phos);
-          }
-          if (i.sed) {
-            this.totalSed += parseFloat(i.sed);
-          }
-          if (i.cAcres) {
-            this.totalCropArea += parseFloat(i.cAcres);
-          }
-        });
+        // consolidated.forEach((i) => {
+        //   if (i.nitr) {
+        //     this.totalNitr += parseFloat(i.nitr);
+        //   }
+        //   if (i.phos) {
+        //     this.totalPhos += parseFloat(i.phos);
+        //   }
+        //   if (i.sed) {
+        //     this.totalSed += parseFloat(i.sed);
+        //   }
+        //   if (i.cAcres) {
+        //     this.totalCropArea += parseFloat(i.cAcres);
+        //   }
+        // });
       } else if (this.layerSelection === 'Field Boundaries') {
-        this.fieldUnits.forEach((obj) => {
+        consolidated = this.fieldUnits;
+        consolidated.forEach((obj) => {
           const label = obj.label;
           if (!this.groupedObjects[label]) {
             this.groupedObjects[label] = {
@@ -1515,23 +1476,38 @@ export default {
           this.groupedObjects[label].sedReducPercent += obj.sedReducPercent;
         });
 
-        this.fieldUnits = Object.values(this.groupedObjects);
+        consolidated = Object.values(this.groupedObjects);
 
-        this.fieldUnits.forEach((i) => {
-          if (i.nitr) {
-            this.totalNitr += parseFloat(i.nitr);
-          }
-          if (i.phos) {
-            this.totalPhos += parseFloat(i.phos);
-          }
-          if (i.sed) {
-            this.totalSed += parseFloat(i.sed);
-          }
-          if (i.cAcres) {
-            this.totalCropArea += parseFloat(i.cAcres);
-          }
-        });
+        // consolidated.forEach((i) => {
+        //   if (i.nitr) {
+        //     this.totalNitr += parseFloat(i.nitr);
+        //   }
+        //   if (i.phos) {
+        //     this.totalPhos += parseFloat(i.phos);
+        //   }
+        //   if (i.sed) {
+        //     this.totalSed += parseFloat(i.sed);
+        //   }
+        //   if (i.cAcres) {
+        //     this.totalCropArea += parseFloat(i.cAcres);
+        //   }
+        // });
       }
+
+      consolidated.forEach((i) => {
+        if (i.nitr) {
+          this.totalNitr += parseFloat(i.nitr);
+        }
+        if (i.phos) {
+          this.totalPhos += parseFloat(i.phos);
+        }
+        if (i.sed) {
+          this.totalSed += parseFloat(i.sed);
+        }
+        if (i.cAcres) {
+          this.totalCropArea += parseInt(i.cAcres);
+        }
+      });
     },
     adjustMap() {
       this.widgetVis = false;
