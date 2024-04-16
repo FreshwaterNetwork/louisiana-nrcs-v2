@@ -1,6 +1,6 @@
 <template>
   <header class="print-hide">
-    <q-btn flat icon="menu" color="white" padding="none" class="q-mr-md">
+    <!-- <q-btn flat icon="menu" color="white" padding="none" class="q-mr-md">
       <q-menu>
         <q-list style="min-width: 100px" dense>
           <q-item
@@ -31,8 +31,11 @@
           </q-item>
         </q-list>
       </q-menu>
-    </q-btn>
-    <span class="text-weight-thin text-white"
+    </q-btn> -->
+    <span
+      class="text-weight-thin text-white"
+      @click="$router.go()"
+      style="cursor: pointer"
       ><span class="text-weight-thin"> Freshwater Network</span>
       <span class="text-weight-thin text-secondary"> </span>
       <span class="text-secondary text-subtitle1 text-weight-thin"

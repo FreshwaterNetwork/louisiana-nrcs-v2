@@ -6,9 +6,9 @@
     style="margin-top: 10px"
   >
     <q-card-section class="bmp-content">
-      <div class="bmp-title">
+      <p class="bmp-title">
         {{ bmp.label }}
-      </div>
+      </p>
       <q-separator dark inset size="3px" color="white" />
       <div>
         <div class="bmp-section">
@@ -187,21 +187,35 @@ export default {
         this.$store.commit('updateBmpSelect', value);
       },
     },
+    initLoadData: {
+      get() {
+        return this.$store.state.initLoadData;
+      },
+      set(value) {
+        this.$store.commit('updateInitLoadData', value);
+      },
+    },
   },
   methods: {
     newArea(val) {
+      console.log(val);
+
       this.areaChanged = !this.areaChanged;
       let a = document.getElementById('area-apply');
       this.bmpAltered = val;
       this.bmpAltered.style = this.$store.state.setBuildNrcsStore.lastCrop.label;
       this.bmpAltered.area_percent = parseInt(a.value);
       this.areaApplied = parseInt(a.value);
+      val.area_percent = this.areaApplied;
 
       this.bmpSelect.forEach((a, i) => {
         if (a.label === this.bmpAltered.label) {
           this.bmpSelect[i] = this.bmpAltered;
+          console.log(this.bmpSelect[i]);
         }
       });
+
+      console.log(this.areaApplied);
 
       this.$store.dispatch('buildNrcsStore', [
         this.bmpSelect,
@@ -214,7 +228,7 @@ export default {
 
 <style scoped>
 .bmp-container {
-  max-width: 350px;
+  max-width: fit-content;
   margin: 0px auto 10px auto;
 }
 .bmp-input {
@@ -222,9 +236,9 @@ export default {
 }
 .bmp-title {
   font-weight: bold;
-  margin: auto;
-  width: max-content;
-  display: block;
+  margin: auto auto 10px auto;
+  width: 350px;
+  text-align: center;
 }
 .bmp-button-group {
   margin: auto;
@@ -235,7 +249,8 @@ export default {
   margin: 15px 5px 0 5px;
 }
 .bmp-section {
-  margin: 5px;
+  margin: 10px auto;
+  width: fit-content;
 }
 .bmp-content {
   margin: auto;
