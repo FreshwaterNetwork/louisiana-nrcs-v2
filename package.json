@@ -1,40 +1,32 @@
 {
-  "name": "vue-template-routing",
-  "version": "0.1.0",
+  "name": "louisiana-nrcs-vite",
+  "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
+    "format": "prettier --write src/"
   },
   "dependencies": {
-    "@arcgis/core": "^4.24.7",
-    "@quasar/extras": "^1.10.10",
-    "animate.css": "^4.1.1",
-    "apexcharts": "^3.33.1",
-    "core-js": "^3.6.5",
-    "html-to-pdfmake": "^2.5.1",
-    "pdfmake": "^0.2.7",
-    "quasar": "^2.0.3",
-    "vue": "^3.0.0",
-    "vue-router": "^4.0.0-0",
-    "vue3-apexcharts": "^1.4.1",
-    "vuex": "^4.0.0-0"
+    "@arcgis/core": "^4.29.10",
+    "@quasar/extras": "^1.16.11",
+    "html-to-pdfmake": "^2.5.6",
+    "pdfmake": "^0.2.10",
+    "quasar": "^2.15.2",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0",
+    "vuex": "^4.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.19.0",
-    "@babel/plugin-proposal-nullish-coalescing-operator": "^7.18.6",
-    "@babel/plugin-proposal-optional-chaining": "^7.18.9",
-    "@vue/cli-plugin-babel": "~4.5.0",
-    "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-plugin-pwa": "~4.5.15",
-    "@vue/cli-plugin-router": "~4.5.0",
-    "@vue/cli-plugin-vuex": "~4.5.0",
-    "@vue/cli-service": "~4.5.0",
-    "@vue/compiler-sfc": "^3.0.0",
-    "babel-eslint": "^10.1.0",
-    "babel-loader": "^8.2.5",
-    "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^7.0.0"
+    "@rushstack/eslint-patch": "^1.8.0",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vue/eslint-config-prettier": "^9.0.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.23.0",
+    "prettier": "^3.2.5",
+    "vite": "^5.2.8"
   }
 }

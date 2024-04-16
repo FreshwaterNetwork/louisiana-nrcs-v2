@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router'
+import App from '../App.vue'
 
 const routes = [
   // {
@@ -11,8 +12,8 @@ const routes = [
     beforeEnter: (to, from, next) => {
       // Your are free to add whatever logic here.
       // On first visit
-      next('/tab1');
-    },
+      next('/tab1')
+    }
   },
   {
     path: '/tab1',
@@ -21,9 +22,7 @@ const routes = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () =>
-      import(
-        /* webpackChunkName: "about" */ '../components/UI/ThePanelTabsVertical.vue'
-      ),
+      import(/* webpackChunkName: "about" */ '../components/UI/ThePanelTabsVertical.vue')
   },
   {
     path: '/tab2',
@@ -32,9 +31,7 @@ const routes = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () =>
-      import(
-        /* webpackChunkName: "about" */ '../components/UI/ThePanelTabsVertical.vue'
-      ),
+      import(/* webpackChunkName: "about" */ '../components/UI/ThePanelTabsVertical.vue')
   },
   {
     path: '/louisiana-cda',
@@ -43,15 +40,13 @@ const routes = [
     // this generates a separate chunk (about.[hash].js) for this route
     // which is lazy-loaded when the route is visited.
     component: () =>
-      import(
-        /* webpackChunkName: "about" */ '../components/UI/ThePanelTabsVertical.vue'
-      ),
-  },
-];
+      import(/* webpackChunkName: "about" */ '../components/UI/ThePanelTabsVertical.vue')
+  }
+]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes,
-});
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes
+})
 
-export default router;
+export default router
