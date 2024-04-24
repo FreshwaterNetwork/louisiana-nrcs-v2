@@ -6,7 +6,8 @@
     right
     :value="updateExists"
     :timeout="0"
-    color="primary">
+    color="primary"
+  >
     <span class="text-caption">
       An update is available
       <q-btn flat @click="refreshApp" size="sm" color="primary">
@@ -26,13 +27,13 @@
         unit="px"
         separator-class="bg-primary"
         horizontal
-        @update:model-value="updateScrollContainerHeight($event)">
+        @update:model-value="updateScrollContainerHeight($event)"
+      >
         <template v-slot:after v-if="smallScreen">
           <!--PANEL COMPONENT-->
           <the-panel-tabs-vertcial
-            v-if="
-              $store.state.config.panelDisplayType == 'tabsVertical'
-            "></the-panel-tabs-vertcial>
+            v-if="$store.state.config.panelDisplayType == 'tabsVertical'"
+          ></the-panel-tabs-vertcial>
         </template>
         <template v-slot:separator>
           <q-avatar
@@ -40,7 +41,8 @@
             color="primary"
             text-color="white"
             size="20px"
-            icon="drag_indicator" />
+            icon="drag_indicator"
+          />
         </template>
         <template v-slot:before>
           <!--MAP COMPONENT-->
@@ -54,13 +56,13 @@
         unit="px"
         separator-class="bg-primary"
         :limits="[70, Infinity]"
-        @update:model-value="updateCondensedTabs($event)">
+        @update:model-value="updateCondensedTabs($event)"
+      >
         <template v-slot:before>
           <!--PANEL COMPONENT-->
           <the-panel-tabs-vertcial
-            v-if="
-              $store.state.config.panelDisplayType == 'tabsVertical'
-            "></the-panel-tabs-vertcial>
+            v-if="$store.state.config.panelDisplayType == 'tabsVertical'"
+          ></the-panel-tabs-vertcial>
         </template>
         <template v-slot:separator>
           <q-avatar
@@ -68,7 +70,8 @@
             color="primary"
             text-color="white"
             size="20px"
-            icon="drag_indicator" />
+            icon="drag_indicator"
+          />
         </template>
         <template v-slot:after>
           <!--MAP COMPONENT-->
@@ -78,7 +81,8 @@
                 margin: 15px auto 15px auto;
                 display: block;
                 width: fit-content;
-              ">
+              "
+            >
               Map Preview
             </h4>
             <p
@@ -86,7 +90,8 @@
                 margin: 15px auto 15px auto;
                 display: block;
                 width: fit-content;
-              ">
+              "
+            >
               Zoom, adjust, and pan around the map for the report screenshot.
               Then, click the "Save Report" button.
             </p>
@@ -110,16 +115,16 @@
 </template>
 
 <script>
-import TheMap from "./components/UI/TheMap.vue";
-import TheHeader from "./components/UI/TheHeader.vue";
-import ThePanelTabsVertcial from "./components/UI/ThePanelTabsVertical.vue";
-import ThePrint from "./components/AppTools/ThePrint.vue";
-import pdfMake from "pdfmake/build/pdfmake";
+import TheMap from './components/UI/TheMap.vue';
+import TheHeader from './components/UI/TheHeader.vue';
+import ThePanelTabsVertcial from './components/UI/ThePanelTabsVertical.vue';
+import ThePrint from './components/AppTools/ThePrint.vue';
+import pdfMake from 'pdfmake/build/pdfmake';
 //import pdfFonts from 'pdfmake/build/vfs_fonts'
-import htmlToPdfmake from "html-to-pdfmake";
+import htmlToPdfmake from 'html-to-pdfmake';
 
 export default {
-  name: "App",
+  name: 'App',
   components: {
     TheMap,
     TheHeader,
@@ -130,20 +135,20 @@ export default {
   data() {
     return {
       splitterModel:
-        this.$store.state.config.panelDisplayType == "tabsVertical" ? 650 : 750,
+        this.$store.state.config.panelDisplayType == 'tabsVertical' ? 650 : 750,
       splitterModelMobile:
-        this.$store.state.config.panelDisplayType == "tabsVertical" ? 300 : 400,
-      panelScreenSize: "v-slot:before",
+        this.$store.state.config.panelDisplayType == 'tabsVertical' ? 300 : 400,
+      panelScreenSize: 'v-slot:before',
       //for the service worker (pwa update)
       registration: null,
       updateExists: false,
     };
   },
   created() {
-    document.addEventListener("swUpdated", this.updateAvailable, {
+    document.addEventListener('swUpdated', this.updateAvailable, {
       once: true,
     });
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
       // We'll also need to add 'refreshing' to our data originally set to false.
       if (this.refreshing) return;
       this.refreshing = true;
@@ -214,7 +219,7 @@ export default {
         return this.$store.state.widgetVis;
       },
       set(value) {
-        this.$store.commit("updateWidgetVis", value);
+        this.$store.commit('updateWidgetVis', value);
       },
     },
     reportCropTables() {
@@ -225,7 +230,7 @@ export default {
         return this.$store.state.printMap;
       },
       set(value) {
-        this.$store.commit("updatePrintMap", value);
+        this.$store.commit('updatePrintMap', value);
       },
     },
   },
@@ -236,18 +241,18 @@ export default {
   },
   mounted() {
     // create data store for the app
-    this.$store.dispatch("requestSupportingLayers");
+    this.$store.dispatch('requestSupportingLayers');
     this.$q.screen.setSizes({ sm: 700 });
   },
   methods: {
     updateCondensedTabs(value) {
       //this function updates the tab state (condensed true/false) to show icon only
       if (value < 150 && !this.$store.state.condensedTabs) {
-        this.$store.commit("updateCondensedTabs", true);
+        this.$store.commit('updateCondensedTabs', true);
       } else if (value > 150 && this.$store.state.condensedTabs) {
-        this.$store.commit("updateCondensedTabs", false);
+        this.$store.commit('updateCondensedTabs', false);
       }
-      this.$store.commit("updateContainerWidth", value);
+      this.$store.commit('updateContainerWidth', value);
     },
     updateScrollContainerHeight(value) {
       //this function updates the height of the scroll container (tab panels) in mobile view
@@ -255,8 +260,8 @@ export default {
       //todo: notate what does the 150 control
       let newVal = value;
       //document.getElementById('panelM').style.height = 'calc(100vh - ' + newVal  + 'px)'
-      document.getElementsByClassName("panelM").forEach((elem) => {
-        elem.style.height = "calc(100vh - " + newVal + "px)";
+      document.getElementsByClassName('panelM').forEach((elem) => {
+        elem.style.height = 'calc(100vh - ' + newVal + 'px)';
       });
     },
     startPdf() {
@@ -267,83 +272,113 @@ export default {
 
       // Create HTML blocks
       var today = new Date();
-      var dateString = today.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+      var dateString = today.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
       });
 
       // Pull in data
-      let unitType = "";
-      let unitList = "";
+      let unitType = '';
+      let unitList = '';
       this.unitSelection.forEach((unit) => {
         if (unit) {
-          unitList += ", " + unit[0];
+          unitList += ', ' + unit[0];
         }
       });
 
       unitList = unitList.substring(2);
 
-      if (this.layerSelection === "NRCS Resource Units") {
-        unitType = "Resource Units";
-      } else if (this.layerSelection === "12-Digit Hydrologic Units") {
-        unitType = "HUC 12 Units";
-      } else if (this.layerSelection === "Catchments") {
-        unitType = "Catchment Units";
-      } else if (this.layerSelection === "Field Boundaries") {
-        unitType = "Agricultural Field Units";
+      if (this.layerSelection === 'NRCS Resource Units') {
+        unitType = 'Resource Units';
+      } else if (this.layerSelection === '12-Digit Hydrologic Units') {
+        unitType = 'HUC 12 Units';
+      } else if (this.layerSelection === 'Catchments') {
+        unitType = 'Catchment Units';
+      } else if (this.layerSelection === 'Field Boundaries') {
+        unitType = 'Agricultural Field Units';
       }
 
-      let cropTable = "";
+      let cropTable = '';
+      let nitVal;
+      let phosVal;
+      let sedVal;
+      let cmVal;
+      let spVal;
 
       this.reportCropTables.forEach((i) => {
-        if (i.newNitr != "0") {
-          let bmpTable = "";
+        if (i.newNitr != '0') {
+          let bmpTable = '';
           // console.log(i);
           i.bmps.forEach((bmp) => {
             // console.log(bmp);
             if (bmp.toggled == true) {
               console.log(bmp);
               if (!bmp.cm_factor) {
-                bmp.cm_factor = "N/A";
+                bmp.cm_factor = 'N/A';
               }
               if (!bmp.sp_factor) {
-                bmp.sp_factor = "N/A";
+                bmp.sp_factor = 'N/A';
               }
               if (!bmp.nit_em) {
-                bmp.nit_em = "N/A";
+                bmp.nit_em = 'N/A';
               }
               if (!bmp.phos_em) {
-                bmp.phos_em = "N/A";
+                bmp.phos_em = 'N/A';
               }
               if (
                 (bmp.area_percent == 0 || !bmp.area_percent) &&
-                bmp.type !== "defined" &&
-                bmp.type !== "exclusive"
+                bmp.type !== 'defined' &&
+                bmp.type !== 'exclusive'
               ) {
                 bmp.area_percent = 100;
+              }
+              if (bmp.nitMod) {
+                nitVal = bmp.nitMod;
+              } else {
+                nitVal = bmp.nit;
+              }
+              if (bmp.phosMod) {
+                phosVal = bmp.phosMod;
+              } else {
+                phosVal = bmp.phos;
+              }
+              if (bmp.sedMod) {
+                sedVal = bmp.sedMod;
+              } else {
+                sedVal = bmp.sed;
+              }
+              if (bmp.cmMod) {
+                cmVal = bmp.cmMod;
+              } else {
+                cmVal = bmp.cm_factor;
+              }
+              if (bmp.spMod) {
+                spVal = bmp.spMod;
+              } else {
+                spVal = bmp.sp_factor;
               }
               bmpTable +=
                 '<table style="margin-bottom: 20px"><tr><td colspan="8" style="background-color: 	#FBCEB1">' +
                 bmp.label +
-                "</td></tr><tr><td>Percent Applied</td><td>Nitrogen Efficiency</td><td>Phosphorus Efficiency</td><td>Sediment Efficiency</td><td>Nitrogen EMC</td><td>Phosphorus EMC</td><td>C</td><td>P</td></tr><tr><td>" +
+                '</td></tr><tr><td>Percent Applied</td><td>Nitrogen Efficiency</td><td>Phosphorus Efficiency</td><td>Sediment Efficiency</td><td>Nitrogen EMC</td><td>Phosphorus EMC</td><td>C</td><td>P</td></tr><tr><td>' +
                 bmp.area_percent +
-                "% </td><td>" +
-                bmp.nit +
-                "</td><td>" +
-                bmp.phos +
-                "</td><td>" +
-                bmp.sed +
-                "</td><td>" +
+                '% </td><td>' +
+                nitVal +
+                '</td><td>' +
+                phosVal +
+                '</td><td>' +
+                sedVal +
+                '</td><td>' +
                 bmp.nit_em +
-                "</td><td>" +
+                '</td><td>' +
                 bmp.phos_em +
-                "</td><td>" +
-                bmp.cm_factor +
-                "</td><td>" +
-                bmp.sp_factor +
-                "</td></tr></table>";
+                '</td><td>' +
+                cmVal +
+                '</td><td>' +
+                spVal +
+                '</td></tr></table>';
             }
           });
           cropTable +=
@@ -369,10 +404,10 @@ export default {
             i.phosReducPercent +
             '%</td><td colspan="2">' +
             i.sedReducPercent +
-            "%</td></tr></table>" +
+            '%</td></tr></table>' +
             '<p style="color: #6082B6"><strong>' +
             i.label +
-            " BMPs: </strong></p>" +
+            ' BMPs: </strong></p>' +
             bmpTable;
         }
       });
@@ -383,85 +418,85 @@ export default {
       var docDefinition = {
         header: {
           text: dateString,
-          alignment: "right",
+          alignment: 'right',
           margin: [0, 20, 20, 0],
         },
         footer: function (currentPage, pageCount) {
           return {
             text:
-              "Page " + currentPage.toString() + " of " + pageCount.toString(),
-            alignment: "center",
+              'Page ' + currentPage.toString() + ' of ' + pageCount.toString(),
+            alignment: 'center',
             margin: [0, 0, 0, 10],
           };
         },
         content: [
           {
-            text: "Louisiana - TNC Freshwater Network",
+            text: 'Louisiana - TNC Freshwater Network',
             bold: true,
-            style: ["header1", "centerItem"],
+            style: ['header1', 'centerItem'],
             margin: [0, 0, 0, 20],
-            alignment: "center",
+            alignment: 'center',
           },
           {
-            text: unitType + " Selected: ",
+            text: unitType + ' Selected: ',
             bold: true,
-            color: "#6082B6",
-            style: "header2",
+            color: '#6082B6',
+            style: 'header2',
           },
           {
             text: unitList,
             margin: [0, 10, 0, 20],
           },
           {
-            text: "Total Nutrient Reduction:",
+            text: 'Total Nutrient Reduction:',
             bold: true,
-            color: "#6082B6",
-            style: "header2",
+            color: '#6082B6',
+            style: 'header2',
           },
           {
             margin: [0, 10, 0, 20],
             table: {
               headerRows: 1,
-              widths: ["auto", "auto", "auto", "auto"],
+              widths: ['auto', 'auto', 'auto', 'auto'],
               body: [
                 [
-                  "All Load Sources - " +
+                  'All Load Sources - ' +
                     this.totalCropArea.toFixed(0) +
-                    " acres",
-                  "Nitrogen",
-                  "Phosphorus",
-                  "Sediment",
+                    ' acres',
+                  'Nitrogen',
+                  'Phosphorus',
+                  'Sediment',
                 ],
                 [
-                  "Initial Load (MT/yr)",
+                  'Initial Load (MT/yr)',
                   this.totalNitr.toFixed(2),
                   this.totalPhos.toFixed(2),
                   this.totalSed.toFixed(2),
                 ],
                 [
-                  "New Load (MT/yr)",
+                  'New Load (MT/yr)',
                   this.totalNewLoadNit.toFixed(2),
                   this.totalNewLoadPhos.toFixed(2),
                   this.totalNewLoadSed.toFixed(2),
                 ],
                 [
-                  "Reduction",
-                  this.totalReducedPercentNit + "%",
-                  this.totalReducedPercentPhos + "%",
-                  this.totalReducedPercentSed + "%",
+                  'Reduction',
+                  this.totalReducedPercentNit + '%',
+                  this.totalReducedPercentPhos + '%',
+                  this.totalReducedPercentSed + '%',
                 ],
               ],
             },
           },
           {
-            text: "Map Overview:",
+            text: 'Map Overview:',
             bold: true,
-            color: "#6082B6",
-            style: "header2",
+            color: '#6082B6',
+            style: 'header2',
           },
           {
             image: this.mapPrintURI,
-            alignment: "center",
+            alignment: 'center',
             margin: [0, 10, 0, 20],
           },
           finalCropTable,
@@ -480,24 +515,24 @@ export default {
         pageBreakBefore: function (currentNode) {
           return (
             currentNode.style &&
-            currentNode.style.indexOf("pdf-pagebreak-before") > -1
+            currentNode.style.indexOf('pdf-pagebreak-before') > -1
           );
         },
       };
       pdfMake.fonts = {
         Roboto: {
           normal:
-            "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf",
-          bold: "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf",
+            'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+          bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
           italics:
-            "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf",
+            'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
           bolditalics:
-            "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf",
+            'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf',
         },
       };
       pdfMake.createPdf(docDefinition).download();
       this.widgetVis = true;
-      document.getElementById("map").classList.remove("report-map");
+      document.getElementById('map').classList.remove('report-map');
     },
   },
   updateAvailable(event) {
@@ -509,7 +544,7 @@ export default {
     // Make sure we only send a 'skip waiting' message if the SW is waiting
     if (!this.registration || !this.registration.waiting) return;
     // Send message to SW to skip the waiting and activate the new SW
-    this.registration.waiting.postMessage({ type: "SKIP_WAITING" });
+    this.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
   },
 };
 </script>

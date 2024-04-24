@@ -183,11 +183,23 @@ const actions = {
 
       array.forEach((bmp, index) => {
         if (type === 'nit') {
-          eff_value = bmp.nit;
+          if (bmp.nitMod) {
+            eff_value = bmp.nitMod;
+          } else {
+            eff_value = bmp.nit;
+          }
         } else if (type === 'phos') {
-          eff_value = bmp.phos;
+          if (bmp.phosMod) {
+            eff_value = bmp.phosMod;
+          } else {
+            eff_value = bmp.phos;
+          }
         } else if (type === 'sed') {
-          eff_value = bmp.sed;
+          if (bmp.sedMod) {
+            eff_value = bmp.sedMod;
+          } else {
+            eff_value = bmp.sed;
+          }
         }
         const overallCropArea = context.state.lastCrop.acres;
         const crop_area_applied = areaApplied * context.state.lastCrop.acres;
@@ -208,11 +220,23 @@ const actions = {
 
       array.forEach((bmp, i) => {
         if (type === 'nit') {
-          eff_value = bmp.nit;
+          if (bmp.nitMod) {
+            eff_value = bmp.nitMod;
+          } else {
+            eff_value = bmp.nit;
+          }
         } else if (type === 'phos') {
-          eff_value = bmp.phos;
+          if (bmp.phosMod) {
+            eff_value = bmp.phosMod;
+          } else {
+            eff_value = bmp.phos;
+          }
         } else if (type === 'sed') {
-          eff_value = bmp.sed;
+          if (bmp.sedMod) {
+            eff_value = bmp.sedMod;
+          } else {
+            eff_value = bmp.sed;
+          }
         }
 
         if (i === 0) {
@@ -226,7 +250,7 @@ const actions = {
     }
     function calculateLSCbmp1(type, array) {
       let bmp = array[0];
-      let percentApplied = bmp.area_percent;
+      let percentApplied = bmp.area_percent / 100;
       // if (!percentApplied) {
       //   percentApplied = 0;
       // }
@@ -255,24 +279,39 @@ const actions = {
         if (context.state.cropLabel === cropRow.label) {
           let emc_bmp_value = 0;
           let eff_value = 0;
-          console.log(eff_value);
           let R = parseFloat(cropRow.runoff_in_yr);
           let r_factor_100_ton_acre = cropRow.rFactor;
           let k_factor = cropRow.k_factor;
           let cls_factor = cropRow.cls_factor;
-          let c_bmp = bmp.cm_factor;
-          let p_bmp = bmp.sp_factor;
+          let c_bmp;
+          let p_bmp;
+          if (bmp.cmMod) {
+            c_bmp = bmp.cmMod;
+          } else {
+            c_bmp = bmp.cm_factor;
+          }
+          if (bmp.spMod) {
+            p_bmp = bmp.spMod;
+          } else {
+            p_bmp = bmp.sp_factor;
+          }
           let applied_acres = percentApplied * parseFloat(cropRow.cAcres);
 
           if (type === 'nit') {
-            emc_bmp_value = cropRow.nit_emc_value;
-            eff_value = bmp.nit;
-
+            emc_bmp_value = cropRow.nit_emc_value / 10;
+            if (bmp.nitMod) {
+              eff_value = bmp.nitMod;
+            } else {
+              eff_value = bmp.nit;
+            }
             rpl_lsc += emc_bmp_value * R * applied_acres * 0.000113;
           } else if (type === 'phos') {
             emc_bmp_value = cropRow.phos_emc_value;
-            eff_value = bmp.phos;
-
+            if (bmp.phosMod) {
+              eff_value = bmp.phosMod;
+            } else {
+              eff_value = bmp.phos;
+            }
             rpl_lsc += emc_bmp_value * R * applied_acres * 0.000113;
           } else if (type === 'sed') {
             rpl_lsc +=
@@ -290,7 +329,7 @@ const actions = {
     }
     function calculateLSCbmp2(type, array, PTF) {
       let bmp = array[0];
-      let percentApplied = bmp.area_percent;
+      let percentApplied = bmp.area_percent / 100;
       let cropRows;
       let rpl_non_lsc = 0;
 
@@ -326,7 +365,11 @@ const actions = {
 
           if (type === 'nit') {
             emc_crop_value = cropRow.nit_emc_value;
-            eff_value = bmp.nit;
+            if (bmp.nitMod) {
+              eff_value = bmp.nitMod;
+            } else {
+              eff_value = bmp.nit;
+            }
             rpl_non_lsc +=
               emc_crop_value *
               R *
@@ -336,7 +379,11 @@ const actions = {
               0.000113;
           } else if (type === 'phos') {
             emc_crop_value = cropRow.phos_emc_value;
-            eff_value = bmp.phos;
+            if (bmp.phosMod) {
+              eff_value = bmp.phosMod;
+            } else {
+              eff_value = bmp.phos;
+            }
             rpl_non_lsc +=
               emc_crop_value *
               R *
@@ -345,7 +392,11 @@ const actions = {
               PTF *
               0.000113;
           } else if (type === 'sed') {
-            eff_value = bmp.sed;
+            if (bmp.sedMod) {
+              eff_value = bmp.sedMod;
+            } else {
+              eff_value = bmp.sed;
+            }
             rpl_non_lsc +=
               (crop_area - percentApplied * crop_area) *
               r_factor_100_ton_acre *
@@ -505,6 +556,10 @@ const actions = {
         ((crop.nitr - crop.newNitr) / crop.nitr) *
         100
       ).toFixed(0);
+
+      if (crop.nitrReducPercent == '-0') {
+        crop.nitrReducPercent = '0';
+      }
     } else {
       crop.nitrReducPercent = 0;
     }
@@ -515,6 +570,10 @@ const actions = {
         ((crop.phos - crop.newPhos) / crop.phos) *
         100
       ).toFixed(0);
+
+      if (crop.phosReducPercent == '-0') {
+        crop.phosReducPercent = '0';
+      }
     } else {
       crop.phosReducPercent = 0;
     }
@@ -525,6 +584,10 @@ const actions = {
         ((crop.sed - crop.newSed) / crop.sed) *
         100
       ).toFixed(0);
+
+      if (crop.sedReducPercent == '-0') {
+        crop.sedReducPercent = '0';
+      }
     } else {
       crop.sedReducPercent = 0;
     }

@@ -22,22 +22,34 @@
             <td>
               <input
                 class="bmp-input"
+                :id="'nit-input-' + bmp.label"
                 type="number"
-                :value="(bmp.nit * 100).toFixed(0)"
+                :value="
+                  bmp.nitMod ? bmp.nitMod * 100 : (bmp.nit * 100).toFixed(0)
+                "
+                @change="updateNit(bmp, bmp.style)"
               />
             </td>
             <td>
               <input
                 class="bmp-input"
+                :id="'phos-input-' + bmp.label"
                 type="number"
-                :value="(bmp.phos * 100).toFixed(0)"
+                :value="
+                  bmp.phosMod ? bmp.phosMod * 100 : (bmp.phos * 100).toFixed(0)
+                "
+                @change="updatePhos(bmp, bmp.style)"
               />
             </td>
             <td>
               <input
                 class="bmp-input"
+                :id="'sed-input-' + bmp.label"
                 type="number"
-                :value="(bmp.sed * 100).toFixed(0)"
+                :value="
+                  bmp.sedMod ? bmp.sedMod * 100 : (bmp.sed * 100).toFixed(0)
+                "
+                @change="updateSed(bmp, bmp.style)"
               />
             </td>
           </tr>
@@ -77,14 +89,26 @@
           v-if="bmp.type == 'full' || bmp.type == 'defined'"
         >
           Cover-Management Factor:
-          <input class="bmp-input" type="number" :value="bmp.cm_factor" />
+          <input
+            class="bmp-input"
+            :id="'cm-input-' + bmp.label"
+            type="number"
+            :value="bmp.cmMod ? bmp.cmMod : bmp.cm_factor"
+            @change="updateCM(bmp, bmp.style)"
+          />
         </div>
         <div
           class="bmp-section"
           v-if="bmp.type == 'full' || bmp.type == 'defined'"
         >
           Support-Management Factor:
-          <input class="bmp-input" type="number" :value="bmp.sp_factor" />
+          <input
+            class="bmp-input"
+            :id="'sp-input-' + bmp.label"
+            type="number"
+            :value="bmp.spMod ? bmp.spMod : bmp.sp_factor"
+            @change="updateSP(bmp, bmp.style)"
+          />
         </div>
         <div
           class="bmp-section"
@@ -111,9 +135,7 @@
             label="Remove"
             @click="$emit(remove)"
           >
-            <q-tooltip>
-              Remove BMP
-            </q-tooltip>
+            <q-tooltip> Remove BMP </q-tooltip>
           </q-btn>
           <q-btn
             class="bmp-button"
@@ -124,12 +146,19 @@
               this.toggledOff = true;
             "
           >
-            <q-tooltip v-if="bmp.toggled == true">
-              Toggle Off
-            </q-tooltip>
-            <q-tooltip v-if="bmp.toggled == false">
-              Toggle On
-            </q-tooltip>
+            <q-tooltip v-if="bmp.toggled == true"> Toggle Off </q-tooltip>
+            <q-tooltip v-if="bmp.toggled == false"> Toggle On </q-tooltip>
+          </q-btn>
+          <q-btn
+            v-if="
+              bmp.nitMod || bmp.phosMod || bmp.sedMod || bmp.cmMod || bmp.spMod
+            "
+            class="bmp-button"
+            color="primary"
+            label="Reset Values"
+            @click="resetValues(bmp)"
+          >
+            <q-tooltip>Reset Values</q-tooltip>
           </q-btn>
         </div>
       </div>
@@ -198,12 +227,11 @@ export default {
   },
   methods: {
     newArea(val) {
-      console.log(val);
-
       this.areaChanged = !this.areaChanged;
       let a = document.getElementById('area-apply');
       this.bmpAltered = val;
-      this.bmpAltered.style = this.$store.state.setBuildNrcsStore.lastCrop.label;
+      this.bmpAltered.style =
+        this.$store.state.setBuildNrcsStore.lastCrop.label;
       this.bmpAltered.area_percent = parseInt(a.value);
       this.areaApplied = parseInt(a.value);
       val.area_percent = this.areaApplied;
@@ -211,16 +239,156 @@ export default {
       this.bmpSelect.forEach((a, i) => {
         if (a.label === this.bmpAltered.label) {
           this.bmpSelect[i] = this.bmpAltered;
-          console.log(this.bmpSelect[i]);
         }
       });
-
-      console.log(this.areaApplied);
 
       this.$store.dispatch('buildNrcsStore', [
         this.bmpSelect,
         this.$store.state.setBuildNrcsStore.lastCrop,
       ]);
+    },
+    updateNit(bmp, crop) {
+      let input;
+
+      this.bmpSelect.forEach((i) => {
+        if (i.label == bmp.label && i.style == crop) {
+          // Change background color of the cell
+          input = document.getElementById('nit-input-' + bmp.label);
+          input.style.backgroundColor = '#f5e95b94';
+
+          // Add property for new input value to the bmp
+          i.nitMod = parseInt(input.value) / 100;
+        }
+      });
+
+      this.$store.dispatch('buildNrcsStore', [
+        this.bmpSelect,
+        this.$store.state.setBuildNrcsStore.lastCrop,
+      ]);
+    },
+    updatePhos(bmp, crop) {
+      let input;
+
+      this.bmpSelect.forEach((i) => {
+        if (i.label == bmp.label && i.style == crop) {
+          // Change background color of the cell
+          input = document.getElementById('phos-input-' + bmp.label);
+          input.style.backgroundColor = '#f5e95b94';
+
+          // Add property for new input value to the bmp
+          i.phosMod = parseInt(input.value) / 100;
+        }
+      });
+
+      this.$store.dispatch('buildNrcsStore', [
+        this.bmpSelect,
+        this.$store.state.setBuildNrcsStore.lastCrop,
+      ]);
+    },
+    updateSed(bmp, crop) {
+      let input;
+
+      this.bmpSelect.forEach((i) => {
+        if (i.label == bmp.label && i.style == crop) {
+          // Change background color of the cell
+          input = document.getElementById('sed-input-' + bmp.label);
+          input.style.backgroundColor = '#f5e95b94';
+
+          // Add property for new input value to the bmp
+          i.sedMod = parseInt(input.value) / 100;
+        }
+      });
+
+      this.$store.dispatch('buildNrcsStore', [
+        this.bmpSelect,
+        this.$store.state.setBuildNrcsStore.lastCrop,
+      ]);
+    },
+    updateCM(bmp, crop) {
+      let input;
+
+      this.bmpSelect.forEach((i) => {
+        if (i.label == bmp.label && i.style == crop) {
+          // Change background color of the cell
+          input = document.getElementById('cm-input-' + bmp.label);
+          input.style.backgroundColor = '#f5e95b94';
+
+          // Add property for new input value to the bmp
+          i.cmMod = parseFloat(input.value);
+        }
+      });
+
+      this.$store.dispatch('buildNrcsStore', [
+        this.bmpSelect,
+        this.$store.state.setBuildNrcsStore.lastCrop,
+      ]);
+    },
+    updateSP(bmp, crop) {
+      let input;
+
+      this.bmpSelect.forEach((i) => {
+        if (i.label == bmp.label && i.style == crop) {
+          // Change background color of the cell
+          input = document.getElementById('sp-input-' + bmp.label);
+          input.style.backgroundColor = '#f5e95b94';
+
+          // Add property for new input value to the bmp
+          i.spMod = parseInt(input.value);
+        }
+      });
+
+      this.$store.dispatch('buildNrcsStore', [
+        this.bmpSelect,
+        this.$store.state.setBuildNrcsStore.lastCrop,
+      ]);
+    },
+    resetValues(bmp) {
+      if (bmp.nitMod) {
+        let inputStyle = document.getElementById(
+          'nit-input-' + bmp.label
+        ).style;
+
+        inputStyle.backgroundColor = '#ffffff';
+        inputStyle.border = '1px solid black';
+        inputStyle.borderRadius = '2px';
+        delete bmp.nitMod;
+      }
+      if (bmp.phosMod) {
+        let inputStyle = document.getElementById(
+          'phos-input-' + bmp.label
+        ).style;
+
+        inputStyle.backgroundColor = '#ffffff';
+        inputStyle.border = '1px solid black';
+        inputStyle.borderRadius = '2px';
+        delete bmp.phosMod;
+      }
+      if (bmp.sedMod) {
+        let inputStyle = document.getElementById(
+          'sed-input-' + bmp.label
+        ).style;
+
+        inputStyle.backgroundColor = '#ffffff';
+        inputStyle.border = '1px solid black';
+        inputStyle.borderRadius = '2px';
+        delete bmp.sedMod;
+      }
+      if (bmp.cmMod) {
+        let inputStyle = document.getElementById('cm-input-' + bmp.label).style;
+
+        inputStyle.backgroundColor = '#ffffff';
+        inputStyle.border = '1px solid black';
+        inputStyle.borderRadius = '2px';
+        delete bmp.cmMod;
+      }
+      if (bmp.spMod) {
+        let inputStyle = document.getElementById('sp-input-' + bmp.label).style;
+
+        inputStyle.backgroundColor = '#ffffff';
+        inputStyle.border = '1px solid black';
+        inputStyle.borderRadius = '2px';
+        delete bmp.spMod;
+      }
     },
   },
 };
