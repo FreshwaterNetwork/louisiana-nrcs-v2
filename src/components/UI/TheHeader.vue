@@ -1,48 +1,18 @@
 <template>
   <header class="print-hide">
-    <!-- <q-btn flat icon="menu" color="white" padding="none" class="q-mr-md">
-      <q-menu>
-        <q-list style="min-width: 100px" dense>
-          <q-item
-            clickable
-            v-close-popup
-            tag="a"
-            target="_blank"
-            href="https://www.nature.org/en-us/what-we-do/our-priorities/protect-water-and-land/land-and-water-stories/protecting-our-ocean/?vu=r.v_marine"
-          >
-            <q-item-section>Link</q-item-section>
-            <q-item-section side>
-              <q-icon name="link" size="xs"></q-icon>
-            </q-item-section>
-          </q-item>
-          <q-separator inset />
-          <q-item clickable v-close-popup tag="a" target="_blank" href="">
-            <q-item-section>Link</q-item-section>
-            <q-item-section side>
-              <q-icon name="link" size="xs"></q-icon>
-            </q-item-section>
-          </q-item>
-          <q-separator inset />
-          <q-item clickable v-close-popup tag="a" target="_blank" href="">
-            <q-item-section>Link</q-item-section>
-            <q-item-section side>
-              <q-icon name="link" size="xs"></q-icon>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-menu>
-    </q-btn> -->
-    <span
-      class="text-weight-thin text-white"
-      @click="$router.go()"
-      style="cursor: pointer"
-      ><span class="text-weight-thin"> Freshwater Network</span>
-      <span class="text-weight-thin text-secondary"> </span>
-      <span class="text-secondary text-subtitle1 text-weight-thin"
-        >&nbsp;&nbsp;Louisiana Freshwater Assessment</span
-      ></span
+    <a
+      target="_blank"
+      href="https://freshwaternetwork.org/"
+      style="text-decoration: none !important"
     >
-    <div>
+      <span class="text-weight-thin text-white" style="cursor: pointer"
+        ><span class="text-weight-thin"> Freshwater Network</span>
+        <span class="text-weight-thin text-secondary"> </span>
+        <span class="text-secondary text-subtitle1 text-weight-thin"
+          >&nbsp;&nbsp;Louisiana Ag Conservation</span
+        ></span
+      >
+      <!-- <div>
       <q-btn
         @click="showHelp = true"
         padding="none"
@@ -50,48 +20,9 @@
         flat
         icon="help"
       />
-    </div>
+    </div> -->
+    </a>
   </header>
-
-  <!-- INTRO DIALOG -->
-  <!-- <q-dialog v-model="showHelp" :persistent="persistent">
-    <q-card style="height: 72vh; max-width: 70vw">
-      <q-toolbar class="bg-white">
-        <q-toolbar-title>
-          <span class="text-weight-thin text-primary"
-            >Freshwater Network
-            <span class="text-weight-thin">
-              Louisiana Freshwater Assessment
-            </span>
-          </span></q-toolbar-title
-        >
-      </q-toolbar>
-      <q-img
-        src="pexels-jeshootscom-576832.jpg"
-        style="width: 70vw;height:55vh"
-      >
-      </q-img>
-      <q-card-actions class="q-pb-none">
-        <q-checkbox
-          v-if="showUserOption"
-          v-model="userHideDialogOptionMeramac"
-          label="Do not show again"
-        />
-        <q-space />
-        <q-btn
-          flat
-          label="OK"
-          color="primary"
-          @click="setUserChoice"
-          v-close-popup
-        />
-      </q-card-actions>
-      <div v-if="showUserOption" class="text-caption q-ml-md text-grey-7">
-        *This dialog can be rerieved at any time by clicking the help button at
-        the top of the screen
-      </div>
-    </q-card>
-  </q-dialog> -->
 </template>
 
 <script>

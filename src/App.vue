@@ -135,7 +135,7 @@ export default {
   data() {
     return {
       splitterModel:
-        this.$store.state.config.panelDisplayType == 'tabsVertical' ? 650 : 750,
+        this.$store.state.config.panelDisplayType == 'tabsVertical' ? 500 : 750,
       splitterModelMobile:
         this.$store.state.config.panelDisplayType == 'tabsVertical' ? 300 : 400,
       panelScreenSize: 'v-slot:before',

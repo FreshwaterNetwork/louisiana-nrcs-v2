@@ -62,13 +62,14 @@
         </p>
         <div>
           <p class="text-bold">Scale:</p>
-          <div class="q-my-md q-ma-auto" style="left: 5px; position: relative">
+          <div class="q-my-md q-ma-auto">
             <q-option-group
               v-model="this.scale"
               :options="layerOptions"
               color="primary"
               dense
-              style="display: flex"
+              inline
+              size="xs"
             />
           </div>
         </div>
@@ -114,7 +115,16 @@
       <p><b>Retrieving data...</b></p>
     </div>
     <!-- second page -->
-    <div v-if="this.mngmtVis === true && this.loadingVis === false">
+    <div
+      v-if="this.mngmtVis === true && this.loadingVis === false"
+      style="
+        position: sticky;
+        top: 0px;
+        background-color: white;
+        width: 100%;
+        z-index: 9999;
+      "
+    >
       <div>
         <div style="display: flex; justify-content: space-between">
           <q-btn class="q-ma-sm" color="primary" @click="backButton()"
@@ -124,11 +134,15 @@
             Build Report
           </q-btn>
         </div>
+      </div>
+      <div>
         <div class="text-h5 text-center">
           All Load Sources -
           {{ this.totalCropArea }}
           acres
         </div>
+      </div>
+      <div>
         <div>
           <!-- table -->
           <table class="total-table" style="">
@@ -195,8 +209,9 @@
           </table>
         </div>
       </div>
-
       <hr />
+    </div>
+    <div>
       <!-- <div v-if="this.finalLayer === 'NRCS Resource Units'"> -->
       <div v-for="crop in this.initLoadData" :key="crop">
         <q-expansion-item
@@ -1372,7 +1387,7 @@ export default {
         }
       });
 
-      this.totalCropArea = tAcres;
+      this.totalCropArea = tAcres.toLocaleString('en-US');
     },
     adjustMap() {
       this.widgetVis = false;
