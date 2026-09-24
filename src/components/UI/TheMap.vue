@@ -8,17 +8,19 @@
 
 <script>
 //import SupportingLayers from '../AppTools/SupportingLayers.vue'
-import Map from '@arcgis/core/Map'
-import MapView from '@arcgis/core/views/MapView'
-import MapImageLayer from '@arcgis/core/layers/MapImageLayer'
-import Legend from '@arcgis/core/widgets/Legend'
-import Measurement from '@arcgis/core/widgets/Measurement'
-import Expand from '@arcgis/core/widgets/Expand'
-import PortalSource from '@arcgis/core/widgets/BasemapGallery/support/PortalBasemapsSource'
-import BasemapGallery from '@arcgis/core/widgets/BasemapGallery'
-import FeatureLayer from '@arcgis/core/layers/FeatureLayer'
-import ScaleBar from '@arcgis/core/widgets/ScaleBar'
-import Point from '@arcgis/core/geometry/Point.js'
+import Map from '@arcgis/core/Map';
+import MapView from '@arcgis/core/views/MapView';
+import MapImageLayer from '@arcgis/core/layers/MapImageLayer';
+import Legend from '@arcgis/core/widgets/Legend';
+import Measurement from '@arcgis/core/widgets/Measurement';
+import Expand from '@arcgis/core/widgets/Expand';
+import PortalSource from '@arcgis/core/widgets/BasemapGallery/support/PortalBasemapsSource';
+import BasemapGallery from '@arcgis/core/widgets/BasemapGallery';
+import FeatureLayer from '@arcgis/core/layers/FeatureLayer';
+import ScaleBar from '@arcgis/core/widgets/ScaleBar';
+import Point from '@arcgis/core/geometry/Point.js';
+import GroupLayer from '@arcgis/core/layers/GroupLayer.js';
+import ImageryLayer from '@arcgis/core/layers/ImageryLayer.js';
 // import GraphicsLayer from '@arcgis/core/layers/GraphicsLayer.js';
 // import Graphic from '@arcgis/core/Graphic.js';
 // import Symbol from '@arcgis/core/symbols/Symbol.js';
@@ -37,8 +39,8 @@ let esri = {
   table1: {},
   table2: {},
   table3: {},
-  table4: {}
-}
+  table4: {},
+};
 
 export default {
   name: 'TheMap',
@@ -55,522 +57,581 @@ export default {
       hucID: 0,
       laruID: 0,
       fID: 0,
-      groupedObjects: []
-    }
+      groupedObjects: [],
+    };
   },
   computed: {
     supportingMapVisibleLayers() {
       //returns list of all ticked objects [{mapService: index in config, id: layerid, type: type}, ...]
-      return this.$store.state.tree.tickedObj
+      return this.$store.state.tree.tickedObj;
     },
     supportingVisibleLayerOpacity() {
       //returns object {value: OpacVal, id: Layerid}
-      return this.$store.state.supportingVisibleLayerOpacity
+      return this.$store.state.supportingVisibleLayerOpacity;
     },
     layerSelection() {
-      return this.$store.state.layerSelection
+      return this.$store.state.layerSelection;
     },
     referenceSelection() {
-      return this.$store.state.referenceSelection
+      return this.$store.state.referenceSelection;
     },
     unitSelection: {
       get() {
-        return this.$store.state.unitSelection
+        return this.$store.state.unitSelection;
       },
       set(value) {
-        this.$store.commit('updateUnitSelection', value)
-      }
+        this.$store.commit('updateUnitSelection', value);
+      },
     },
     unitLength: {
       get() {
-        return this.$store.state.unitLength
+        return this.$store.state.unitLength;
       },
       set(value) {
-        this.$store.commit('updateUnitLength', value)
-      }
+        this.$store.commit('updateUnitLength', value);
+      },
     },
     loadingVis: {
       get() {
-        return this.$store.state.loadingVis
+        return this.$store.state.loadingVis;
       },
       set(value) {
-        this.$store.commit('updateLoadingVis', value)
-      }
+        this.$store.commit('updateLoadingVis', value);
+      },
     },
     mngmtVis: {
       get() {
-        return this.$store.state.mngmtVis
+        return this.$store.state.mngmtVis;
       },
       set(value) {
-        this.$store.commit('updateMngmtVis', value)
-      }
+        this.$store.commit('updateMngmtVis', value);
+      },
     },
     endLoading: {
       get() {
-        return this.$store.state.endLoading
+        return this.$store.state.endLoading;
       },
       set(value) {
-        this.$store.commit('updateEndLoading', value)
-      }
+        this.$store.commit('updateEndLoading', value);
+      },
     },
     resourceUnits: {
       get() {
-        return this.$store.state.resourceUnits
+        return this.$store.state.resourceUnits;
       },
       set(value) {
-        this.$store.commit('updateResourceUnits', value)
-      }
+        this.$store.commit('updateResourceUnits', value);
+      },
     },
     hucUnits: {
       get() {
-        return this.$store.state.hucUnits
+        return this.$store.state.hucUnits;
       },
       set(value) {
-        this.$store.commit('updateHucUnits', value)
-      }
+        this.$store.commit('updateHucUnits', value);
+      },
     },
     catchUnits: {
       get() {
-        return this.$store.state.catchUnits
+        return this.$store.state.catchUnits;
       },
       set(value) {
-        this.$store.commit('updateCatchUnits', value)
-      }
+        this.$store.commit('updateCatchUnits', value);
+      },
     },
     fieldUnits: {
       get() {
-        return this.$store.state.fieldUnits
+        return this.$store.state.fieldUnits;
       },
       set(value) {
-        this.$store.commit('updateFieldUnits', value)
-      }
+        this.$store.commit('updateFieldUnits', value);
+      },
     },
     totalNitr: {
       get() {
-        return this.$store.state.totalNitr
+        return this.$store.state.totalNitr;
       },
       set(value) {
-        this.$store.commit('updateTotalNitr', value)
-      }
+        this.$store.commit('updateTotalNitr', value);
+      },
     },
     totalPhos: {
       get() {
-        return this.$store.state.totalPhos
+        return this.$store.state.totalPhos;
       },
       set(value) {
-        this.$store.commit('updateTotalPhos', value)
-      }
+        this.$store.commit('updateTotalPhos', value);
+      },
     },
     totalSed: {
       get() {
-        return this.$store.state.totalSed
+        return this.$store.state.totalSed;
       },
       set(value) {
-        this.$store.commit('updateTotalSed', value)
-      }
+        this.$store.commit('updateTotalSed', value);
+      },
     },
     totalCropArea: {
       get() {
-        return this.$store.state.totalCropArea
+        return this.$store.state.totalCropArea;
       },
       set(value) {
-        this.$store.commit('updateTotalCropArea', value)
-      }
+        this.$store.commit('updateTotalCropArea', value);
+      },
     },
     backBtn() {
-      return this.$store.state.backBtn
+      return this.$store.state.backBtn;
     },
     unitIndex: {
       get() {
-        return this.$store.state.unitIndex
+        return this.$store.state.unitIndex;
       },
       set(value) {
-        this.$store.commit('updateUnitIndex', value)
-      }
+        this.$store.commit('updateUnitIndex', value);
+      },
     },
     printMap() {
-      return this.$store.state.printMap
+      return this.$store.state.printMap;
     },
     initLoadData: {
       get() {
-        return this.$store.state.initLoadData
+        return this.$store.state.initLoadData;
       },
       set(value) {
-        this.$store.commit('updateInitLoadData', value)
-      }
+        this.$store.commit('updateInitLoadData', value);
+      },
     },
     highlighted: {
       get() {
-        return this.$store.state.highlighted
+        return this.$store.state.highlighted;
       },
       set(value) {
-        this.$store.commit('updateHighlighted', value)
-      }
+        this.$store.commit('updateHighlighted', value);
+      },
     },
     cropRows: {
       get() {
-        return this.$store.state.cropRows
+        return this.$store.state.cropRows;
       },
       set(value) {
-        this.$store.commit('updateCropRows', value)
-      }
+        this.$store.commit('updateCropRows', value);
+      },
     },
     widgetVis() {
-      return this.$store.state.widgetVis
+      return this.$store.state.widgetVis;
     },
     reportCropTables: {
       get() {
-        return this.$store.state.reportCropTables
+        return this.$store.state.reportCropTables;
       },
       set(value) {
-        this.$store.commit('updateReportCropTables', value)
-      }
+        this.$store.commit('updateReportCropTables', value);
+      },
     },
     totalSelectBmps() {
-      return this.$store.state.totalSelectBmps
+      return this.$store.state.totalSelectBmps;
     },
     consolidated: {
       get() {
-        return this.$store.state.consolidated
+        return this.$store.state.consolidated;
       },
       set(value) {
-        this.$store.commit('updateConsolidated', value)
-      }
-    }
+        this.$store.commit('updateConsolidated', value);
+      },
+    },
   },
   watch: {
     supportingMapVisibleLayers() {
-      this.updateSupportingVisibility()
+      this.updateSupportingVisibility();
     },
     supportingVisibleLayerOpacity() {
-      this.updateSupportingOpacity()
+      this.updateSupportingOpacity();
     },
     printMap() {
       if (this.printMap) {
-        this.getMapPrint()
+        this.getMapPrint();
       }
 
       this.initLoadData.forEach((obj) => {
         this.totalSelectBmps.forEach((bmp) => {
           if (bmp.style === obj.label) {
             if (obj.bmps.includes(bmp) == false) {
-              obj.bmps.push(bmp)
+              obj.bmps.push(bmp);
             }
           }
-        })
-      })
+        });
+      });
 
-      this.reportCropTables = this.initLoadData
+      this.reportCropTables = this.initLoadData;
     },
     widgetVis() {
       if (!this.widgetVis) {
-        this.hideWidgets()
+        this.hideWidgets();
       } else {
-        this.showWidgets()
+        this.showWidgets();
       }
     },
     highlighted: {
       deep: true,
       handler() {
-        esri.highlightUnit?.remove()
+        esri.highlightUnit?.remove();
 
         if (this.layerSelection === 'NRCS Resource Units') {
-          esri.highlightUnit = esri.nrcsLayerView.highlight(this.highlighted)
+          esri.highlightUnit = esri.nrcsLayerView.highlight(this.highlighted);
         } else if (this.layerSelection === '12-Digit Hydrologic Units') {
-          esri.highlightUnit = esri.hucLayerView.highlight(this.highlighted)
+          esri.highlightUnit = esri.hucLayerView.highlight(this.highlighted);
         } else if (this.layerSelection === 'Catchments') {
-          esri.highlightUnit = esri.catchLayerView.highlight(this.highlighted)
+          esri.highlightUnit = esri.catchLayerView.highlight(this.highlighted);
         } else if (this.layerSelection === 'Field Boundaries') {
-          esri.highlightUnit = esri.fieldLayerView.highlight(this.highlighted)
+          esri.highlightUnit = esri.fieldLayerView.highlight(this.highlighted);
         }
-      }
+      },
     },
     loadingVis(newValue) {
       if (newValue) {
         if (esri.laySelect === 'NRCS Resource Units') {
-          this.callUnitQueries('LARU')
+          this.callUnitQueries('LARU');
         } else if (esri.laySelect === '12-Digit Hydrologic Units') {
-          this.callUnitQueries('HUC_12')
+          this.callUnitQueries('HUC_12');
         } else if (esri.laySelect === 'Catchments') {
-          this.callUnitQueries('Catchment_ID')
+          this.callUnitQueries('Catchment_ID');
         } else if (esri.laySelect === 'Field Boundaries') {
-          this.callUnitQueries('fid')
+          this.callUnitQueries('fid');
         }
       } else {
-        this.resourceUnits = []
-        this.hucUnits = []
-        this.catchUnits = []
-        this.fieldUnits = []
+        this.resourceUnits = [];
+        this.hucUnits = [];
+        this.catchUnits = [];
+        this.fieldUnits = [];
       }
     },
     endLoading(newValue) {
       if (newValue === true) {
-        this.consolidateInitLoads()
+        this.consolidateInitLoads();
       }
     },
     unitLength(newValue) {
       if (newValue > 4) {
-        this.unitClick.remove()
+        this.unitClick.remove();
       }
-    }
+    },
   },
 
   mounted() {
     //select a basemap
     esri.map = new Map({
-      basemap: 'topo-vector'
-    })
+      basemap: 'topo-vector',
+    });
 
     //create the map view
     esri.mapView = new MapView({
       map: esri.map,
       center: [-92.024476, 31.031655],
       zoom: 8,
-      container: this.$el
-    })
+      container: this.$el,
+    });
 
     //add supporting map layers listed in config
     this.$store.state.config.supportingMapLayers.forEach((service) => {
       let l = new MapImageLayer({
-        url: service.mapService
-      })
-      esri.map.add(l)
+        url: service.mapService,
+      });
+      esri.map.add(l);
       l.when(function () {
         //create sublayer list
-        let sublayerList = []
+        let sublayerList = [];
         // let layer = esri.map.layers.items.find((layer) => {
         //   return layer.type == 'map-image' && layer.url == service.mapService;
         // });
 
         l.allSublayers.items.forEach((sublayer) => {
           //see if popup template recrod exists...
-          let popups = service.popupTemplate
-          let layerConfig = popups.find(({ id }) => id == sublayer.id)
+          let popups = service.popupTemplate;
+          let layerConfig = popups.find(({ id }) => id == sublayer.id);
           //if the template is configured
           if (layerConfig) {
             //create template
-            let fieldInfos = layerConfig.fields
+            let fieldInfos = layerConfig.fields;
             let template = {
               actions: [],
               content: [
                 {
                   type: 'fields',
-                  fieldInfos: fieldInfos
-                }
-              ]
-            }
+                  fieldInfos: fieldInfos,
+                },
+              ],
+            };
             sublayerList.push({
               id: sublayer.id,
               visible: false,
               opacity: 1,
-              popupTemplate: template
-            })
+              popupTemplate: template,
+            });
           }
           //if there is no popup push without a template
           else {
             sublayerList.push({
               id: sublayer.id,
               visible: false,
-              opacity: 1
-            })
+              opacity: 1,
+            });
           }
-        })
-        l.sublayers = sublayerList
-      })
-    })
+        });
+        l.sublayers = sublayerList;
+      });
+    });
 
-    esri.mapImage = new MapImageLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer',
+    const groupUrl =
+      'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer';
+
+    esri.mapImage = new GroupLayer({
       title: '',
-      sublayers: [
-        {
-          id: 0,
+      layers: [
+        new FeatureLayer({
+          url: `${groupUrl}/0`,
           title: 'Catchments',
           visible: false,
-          opacity: 0.8
-        },
-        {
-          id: 1,
+          opacity: 0.8,
+        }),
+        new FeatureLayer({
+          url: `${groupUrl}/1`,
           title: '12-Digit Hydrologic Units',
           visible: false,
-          opacity: 0.8
-        },
-        {
-          id: 2,
+          opacity: 0.8,
+        }),
+        new FeatureLayer({
+          url: `${groupUrl}/2`,
           title: 'NRCS Resource Units',
           visible: false,
-          opacity: 0.8
-        },
-        {
-          id: 3,
+          opacity: 0.8,
+        }),
+        new FeatureLayer({
+          url: `${groupUrl}/3`,
           title: 'Field Boundaries',
           visible: false,
-          opacity: 0.8
-        },
-        {
-          id: 4,
+          opacity: 0.8,
+        }),
+        new MapImageLayer({
+          url: 'https://cumulus-ags.tnc.org/arcgis/rest/services/nascience/CCS_Rasters_1/MapServer',
           title: 'Agricultural Fields',
           visible: true,
-          opacity: 0.8
-        },
-        {
-          id: 5,
+          opacity: 0.8,
+          sublayers: [{ id: 591, visible: true }],
+        }),
+        new FeatureLayer({
+          url: `${groupUrl}/4`,
           title: 'Poultry Production',
           visible: false,
-          opacity: 0.8
-        },
-        {
-          id: 6,
+          opacity: 0.8,
+        }),
+        new FeatureLayer({
+          url: `${groupUrl}/5`,
           title: 'Dairy Production',
           visible: false,
-          opacity: 0.8
-        }
-      ]
-    })
+          opacity: 0.8,
+        }),
+      ],
+    });
 
-    esri.map.add(esri.mapImage)
+    // esri.mapImage = new MapImageLayer({
+    //   url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer',
+    //   title: '',
+    //   sublayers: [
+    //     {
+    //       id: 0,
+    //       title: 'Catchments',
+    //       visible: false,
+    //       opacity: 0.8,
+    //     },
+    //     {
+    //       id: 1,
+    //       title: '12-Digit Hydrologic Units',
+    //       visible: false,
+    //       opacity: 0.8,
+    //     },
+    //     {
+    //       id: 2,
+    //       title: 'NRCS Resource Units',
+    //       visible: false,
+    //       opacity: 0.8,
+    //     },
+    //     {
+    //       id: 3,
+    //       title: 'Field Boundaries',
+    //       visible: false,
+    //       opacity: 0.8,
+    //     },
+    //     {
+    //       id: 4,
+    //       title: 'Agricultural Fields',
+    //       visible: true,
+    //       opacity: 0.8,
+    //     },
+    //     {
+    //       id: 5,
+    //       title: 'Poultry Production',
+    //       visible: false,
+    //       opacity: 0.8,
+    //     },
+    //     {
+    //       id: 6,
+    //       title: 'Dairy Production',
+    //       visible: false,
+    //       opacity: 0.8,
+    //     },
+    //   ],
+    // });
+
+    esri.map.add(esri.mapImage);
 
     // Layers and layerviews
     const nrcs = new FeatureLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/2',
+      url: 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer/2',
+      // url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/2',
       visible: true,
       title: 'Scale - Resource Units',
       opacity: 0.8,
-      outFields: ['LARU']
-    })
+      outFields: ['LARU'],
+    });
 
-    esri.map.add(nrcs)
+    esri.map.add(nrcs);
 
-    esri.nrcsLayerView = ''
+    esri.nrcsLayerView = '';
     esri.mapView.whenLayerView(nrcs).then(function (layerView) {
-      esri.nrcsLayerView = layerView
-    })
+      esri.nrcsLayerView = layerView;
+    });
 
     //
 
     const huc = new FeatureLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/1',
+      url: 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer/1',
+      // url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/1',
       visible: false,
       title: 'Scale - HUC 12',
       opacity: 0.8,
 
-      outFields: ['HUC_12']
-    })
+      outFields: ['HUC_12'],
+    });
 
-    esri.map.add(huc)
+    esri.map.add(huc);
 
-    esri.hucLayerView = ''
+    esri.hucLayerView = '';
     esri.mapView.whenLayerView(huc).then(function (layerView) {
-      esri.hucLayerView = layerView
-    })
+      esri.hucLayerView = layerView;
+    });
 
     const catchments = new FeatureLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/0',
+      url: 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer/0',
+      // url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/0',
       visible: false,
       title: 'Scale - Catchments',
       opacity: 0.8,
 
-      outFields: ['Catchment_ID']
-    })
+      outFields: ['Catchment_ID'],
+    });
 
-    esri.map.add(catchments)
+    esri.map.add(catchments);
 
-    esri.catchLayerView = ''
+    esri.catchLayerView = '';
     esri.mapView.whenLayerView(catchments).then(function (layerView) {
-      esri.catchLayerView = layerView
-    })
+      esri.catchLayerView = layerView;
+    });
 
     const field = new FeatureLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/3',
+      url: 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer/3',
+      // url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/3',
       visible: false,
       title: 'Scale - Agricultural Fields',
       opacity: 0.8,
 
-      outFields: ['fid']
-    })
+      outFields: ['fid'],
+    });
 
-    esri.map.add(field)
+    esri.map.add(field);
 
-    esri.fieldLayerView = ''
+    esri.fieldLayerView = '';
     esri.mapView.whenLayerView(field).then(function (layerView) {
-      esri.fieldLayerView = layerView
-    })
+      esri.fieldLayerView = layerView;
+    });
 
     // Tables
     esri.table1 = new FeatureLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/7',
-      outFields: ['*']
-    })
+      url: 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer/6',
+      // url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/7',
+      outFields: ['*'],
+    });
 
     esri.table2 = new FeatureLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/8',
-      outFields: ['*']
-    })
+      url: 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer/7',
+      // url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/8',
+      outFields: ['*'],
+    });
 
     esri.table3 = new FeatureLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/9',
-      outFields: ['*']
-    })
+      url: 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer/8',
+      // url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/9',
+      outFields: ['*'],
+    });
 
     esri.table4 = new FeatureLayer({
-      url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/10',
-      outFields: ['*']
-    })
+      url: 'https://services.arcgis.com/F7DSX1DSNSiWmOqh/arcgis/rest/services/Cirrus_LA/FeatureServer/9',
+      // url: 'https://cirrus.tnc.org/arcgis/rest/services/FN_Louisiana/CDA_feature_service_all/MapServer/10',
+      outFields: ['*'],
+    });
 
     // Reference layer selection logic
     this.$watch('referenceSelection', () => {
-      esri.mapImage.sublayers.forEach((sub) => {
-        if (sub.id === 4 || sub.id === 5 || sub.id === 6) {
-          let layerTitle = sub.title
-
-          if (this.referenceSelection === layerTitle) {
-            sub.visible = true
-          } else if (this.referenceSelection !== layerTitle) {
-            sub.visible = false
-          }
+      const referenceTitles = [
+        'Agricultural Fields',
+        'Poultry Production',
+        'Dairy Production',
+      ];
+      esri.mapImage.layers.forEach((layer) => {
+        if (referenceTitles.includes(layer.title)) {
+          layer.visible = this.referenceSelection === layer.title;
         }
-      })
-    })
+      });
+    });
 
     // Scale layer selection logic
     this.$watch('layerSelection', () => {
       if (esri.highlightUnit) {
-        esri.highlightUnit.remove()
+        esri.highlightUnit.remove();
       }
 
       this.units.forEach((unit) => {
-        this.units.splice(unit)
-      })
+        this.units.splice(unit);
+      });
 
-      this.unitSelection = []
+      this.unitSelection = [];
 
       if (this.layerSelection === 'NRCS Resource Units') {
-        nrcs.visible = true
-        huc.visible = false
-        catchments.visible = false
-        field.visible = false
+        nrcs.visible = true;
+        huc.visible = false;
+        catchments.visible = false;
+        field.visible = false;
       } else if (this.layerSelection === '12-Digit Hydrologic Units') {
-        huc.visible = true
-        nrcs.visible = false
-        catchments.visible = false
-        field.visible = false
+        huc.visible = true;
+        nrcs.visible = false;
+        catchments.visible = false;
+        field.visible = false;
       } else if (this.layerSelection === 'Catchments') {
-        catchments.visible = true
-        huc.visible = false
-        field.visible = false
-        nrcs.visible = false
+        catchments.visible = true;
+        huc.visible = false;
+        field.visible = false;
+        nrcs.visible = false;
       } else if (this.layerSelection === 'Field Boundaries') {
-        field.visible = true
-        nrcs.visible = false
-        huc.visible = false
-        catchments.visible = false
+        field.visible = true;
+        nrcs.visible = false;
+        huc.visible = false;
+        catchments.visible = false;
       }
 
-      esri.laySelect = this.layerSelection
-    })
+      esri.laySelect = this.layerSelection;
+    });
 
-    let _this = this
-    esri.highlightUnit
+    let _this = this;
+    esri.highlightUnit;
 
     // Click event listener to build selected units list and crop lists
 
@@ -579,13 +640,13 @@ export default {
       if (_this.mngmtVis == false) {
         let point = new Point({
           x: response.mapPoint.longitude,
-          y: response.mapPoint.latitude
-        })
+          y: response.mapPoint.latitude,
+        });
 
         if (esri.laySelect === 'NRCS Resource Units') {
-          const queryNRCS = nrcs.createQuery(point)
-          queryNRCS.geometry = point
-          queryNRCS.outFields = ['*']
+          const queryNRCS = nrcs.createQuery(point);
+          queryNRCS.geometry = point;
+          queryNRCS.outFields = ['*'];
           // let highlightGraphics = new GraphicsLayer({});
           // let hlgraphic;
           // let hlSymbol = {
@@ -599,28 +660,28 @@ export default {
 
           nrcs.queryFeatures(queryNRCS).then(function (result) {
             if (result) {
-              let feature = result.features[0]
-              _this.laruID = feature.attributes.LARU
+              let feature = result.features[0];
+              _this.laruID = feature.attributes.LARU;
 
-              let selected = [_this.laruID, feature.attributes['OBJECTID']]
+              let selected = [_this.laruID, feature.attributes['OBJECTID']];
 
               // Check if new unit has already been selected
               let exists = _this.units.some(
-                (arr) => arr[0] === selected[0] && arr[1] === selected[1]
-              )
+                (arr) => arr[0] === selected[0] && arr[1] === selected[1],
+              );
 
               if (!exists) {
-                _this.units.push(selected)
+                _this.units.push(selected);
               }
 
-              _this.unitLength = _this.units.length
+              _this.unitLength = _this.units.length;
 
-              let tempHL = []
+              let tempHL = [];
               _this.highlighted.forEach((i) => {
-                tempHL.push(i)
-              })
-              tempHL.push(feature.attributes['OBJECTID'])
-              _this.highlighted = tempHL
+                tempHL.push(i);
+              });
+              tempHL.push(feature.attributes['OBJECTID']);
+              _this.highlighted = tempHL;
 
               // hlgraphic = new Graphic({
               //   geometry: feature.geometry,
@@ -630,105 +691,105 @@ export default {
               // highlightGraphics.graphics.push(hlgraphic);
               // esri.map.add(highlightGraphics);
             }
-          })
+          });
         } else if (esri.laySelect === '12-Digit Hydrologic Units') {
-          const queryHuc = huc.createQuery(point)
-          queryHuc.geometry = point
-          queryHuc.outFields = ['*']
+          const queryHuc = huc.createQuery(point);
+          queryHuc.geometry = point;
+          queryHuc.outFields = ['*'];
 
           huc.queryFeatures(queryHuc).then(function (result) {
             if (result) {
-              let feature = result.features[0]
-              _this.hucID = feature.attributes.HUC_12
+              let feature = result.features[0];
+              _this.hucID = feature.attributes.HUC_12;
 
-              let selected = [_this.hucID, feature.attributes['OBJECTID']]
+              let selected = [_this.hucID, feature.attributes['OBJECTID']];
 
               // Check if new unit has already been selected
               let exists = _this.units.some(
-                (arr) => arr[0] === selected[0] && arr[1] === selected[1]
-              )
+                (arr) => arr[0] === selected[0] && arr[1] === selected[1],
+              );
 
               if (!exists) {
-                _this.units.push(selected)
+                _this.units.push(selected);
               }
 
-              _this.unitLength = _this.units.length
+              _this.unitLength = _this.units.length;
 
-              let tempHL = []
+              let tempHL = [];
               _this.highlighted.forEach((i) => {
-                tempHL.push(i)
-              })
-              tempHL.push(feature.attributes['OBJECTID'])
-              _this.highlighted = tempHL
+                tempHL.push(i);
+              });
+              tempHL.push(feature.attributes['OBJECTID']);
+              _this.highlighted = tempHL;
             }
-          })
+          });
         } else if (esri.laySelect === 'Catchments') {
-          const queryCatch = catchments.createQuery(point)
-          queryCatch.geometry = point
-          queryCatch.outFields = ['*']
+          const queryCatch = catchments.createQuery(point);
+          queryCatch.geometry = point;
+          queryCatch.outFields = ['*'];
 
           catchments.queryFeatures(queryCatch).then(function (result) {
             if (result) {
-              let feature = result.features[0]
-              _this.catchID = feature.attributes.Catchment_ID
+              let feature = result.features[0];
+              _this.catchID = feature.attributes.Catchment_ID;
 
-              let selected = [_this.catchID, feature.attributes['OBJECTID_1']]
+              let selected = [_this.catchID, feature.attributes['OBJECTID_1']];
 
               // Check if new unit has already been selected
               let exists = _this.units.some(
-                (arr) => arr[0] === selected[0] && arr[1] === selected[1]
-              )
+                (arr) => arr[0] === selected[0] && arr[1] === selected[1],
+              );
 
               if (!exists) {
-                _this.units.push(selected)
+                _this.units.push(selected);
               }
 
-              _this.unitLength = _this.units.length
+              _this.unitLength = _this.units.length;
 
-              let tempHL = []
+              let tempHL = [];
               _this.highlighted.forEach((i) => {
-                tempHL.push(i)
-              })
-              tempHL.push(feature.attributes['OBJECTID_1'])
-              _this.highlighted = tempHL
+                tempHL.push(i);
+              });
+              tempHL.push(feature.attributes['OBJECTID_1']);
+              _this.highlighted = tempHL;
             }
-          })
+          });
         } else if (esri.laySelect === 'Field Boundaries') {
-          const queryField = field.createQuery(point)
-          queryField.geometry = point
-          queryField.outFields = ['*']
+          const queryField = field.createQuery(point);
+          queryField.geometry = point;
+          queryField.outFields = ['*'];
 
           field.queryFeatures(queryField).then(function (result) {
             if (result) {
-              let feature = result.features[0]
-              _this.fID = feature.attributes.fid
+              let feature = result.features[0];
+              _this.fID = feature.attributes.fid;
 
-              let selected = [_this.fID, feature.attributes['OBJECTID']]
+              let selected = [_this.fID, feature.attributes['OBJECTID']];
 
               // Check if new unit has already been selected
               let exists = _this.units.some(
-                (arr) => arr[0] === selected[0] && arr[1] === selected[1]
-              )
+                (arr) => arr[0] === selected[0] && arr[1] === selected[1],
+              );
 
               if (!exists) {
-                _this.units.push(selected)
+                _this.units.push(selected);
               }
 
-              _this.unitLength = _this.units.length
+              _this.unitLength = _this.units.length;
 
-              let tempHL = []
+              let tempHL = [];
               _this.highlighted.forEach((i) => {
-                tempHL.push(i)
-              })
-              tempHL.push(feature.attributes['OBJECTID'])
-              _this.highlighted = tempHL
+                tempHL.push(i);
+              });
+              tempHL.push(feature.attributes['OBJECTID']);
+              _this.highlighted = tempHL;
             }
-          })
+          });
         }
 
-        _this.unitSelection = _this.units
+        _this.unitSelection = _this.units;
       }
-    })
+    });
 
     //code to add highlight feature for map image layer
     // esri.mapView.popup.watch('selectedFeature', function (gra) {
@@ -762,51 +823,53 @@ export default {
         expandIconClass: 'esri-icon-layer-list',
         expandTooltip: 'Expand LayerList',
         view: esri.mapView,
-        content: document.getElementById('supportingLayers')
-      })
-      esri.mapView.ui.add(supportingLayersExpand, 'top-right')
+        content: document.getElementById('supportingLayers'),
+      });
+      esri.mapView.ui.add(supportingLayersExpand, 'top-right');
     }
 
     //add scalebar widget
     esri.scaleBar = new ScaleBar({
       view: esri.mapView,
-      unit: 'dual'
-    })
+      unit: 'dual',
+    });
     esri.mapView.ui.add(esri.scaleBar, {
-      position: 'bottom-right'
-    })
+      position: 'bottom-right',
+    });
 
     //add measure tools
     esri.measurement = new Measurement({
-      view: esri.mapView
-    })
-    esri.mapView.ui.add(esri.measurement, 'top-left')
+      view: esri.mapView,
+    });
+    esri.mapView.ui.add(esri.measurement, 'top-left');
 
     // create legend widget
     esri.legend = new Legend({
-      view: esri.mapView
-    })
+      view: esri.mapView,
+    });
 
     // create expand widget to hide and show legend
     esri.lgExpand = new Expand({
       view: esri.mapView,
-      content: esri.legend
-    })
+      content: esri.legend,
+    });
 
     // add expand to map
-    esri.mapView.ui.add(esri.lgExpand, 'bottom-left')
+    esri.mapView.ui.add(esri.lgExpand, 'bottom-left');
     // show expanded legend on desktop, collapse on mobile
-    this.$q.screen.lt.sm || this.$q.screen.lt.md ? true : esri.lgExpand.expand()
+    this.$q.screen.lt.sm || this.$q.screen.lt.md
+      ? true
+      : esri.lgExpand.expand();
 
     //watch size of map view and adjust legend to close if map gets too small
     esri.mapView.on('resize', function (event) {
       if (event.width < 546) {
-        esri.lgExpand.collapse()
+        esri.lgExpand.collapse();
       }
       if (event.width > 546) {
-        esri.lgExpand.expand()
+        esri.lgExpand.expand();
       }
-    })
+    });
 
     // basemaps
     const allowedBasemapTitles = [
@@ -814,55 +877,56 @@ export default {
       'Imagery',
       'Imagery Hybrid',
       'Streets',
-      'Dark Gray Canvas'
-    ]
+      'Dark Gray Canvas',
+    ];
     // filtering portal basemaps
     const source = new PortalSource({
-      filterFunction: (basemap) => allowedBasemapTitles.indexOf(basemap.portalItem.title) > -1
-    })
+      filterFunction: (basemap) =>
+        allowedBasemapTitles.indexOf(basemap.portalItem.title) > -1,
+    });
     // basemap gallery widget
     var basemapGallery = new BasemapGallery({
       view: esri.mapView,
       source: source,
-      container: document.createElement('div')
-    })
+      container: document.createElement('div'),
+    });
     // expand to hold basemap gallery
     var bgExpand = new Expand({
       view: esri.mapView,
-      content: basemapGallery
-    })
+      content: basemapGallery,
+    });
     // place expand in view
     esri.mapView.ui.add(bgExpand, {
-      position: 'top-right'
-    })
+      position: 'top-right',
+    });
     // close expand when basemap is changed
     esri.map.watch('basemap.title', function () {
-      bgExpand.collapse()
-    })
+      bgExpand.collapse();
+    });
 
     // move zoom controls to top right
-    esri.mapView.ui.move(['zoom'], 'top-right')
+    esri.mapView.ui.move(['zoom'], 'top-right');
   },
 
   methods: {
     async callUnitQueries(field) {
-      this.endLoading = false
-      this.resourceUnits = []
-      this.hucUnits = []
-      this.catchUnits = []
-      this.fieldUnits = []
+      this.endLoading = false;
+      this.resourceUnits = [];
+      this.hucUnits = [];
+      this.catchUnits = [];
+      this.fieldUnits = [];
       for (let unit of this.units) {
-        await this.unitQueries(unit, field)
+        await this.unitQueries(unit, field);
       }
-      this.endLoading = true
+      this.endLoading = true;
     },
     unitQueries(unit, field) {
       return new Promise((resolve, reject) => {
-        let count = 0
-        const tables = [esri.table1, esri.table2, esri.table3, esri.table4]
+        let count = 0;
+        const tables = [esri.table1, esri.table2, esri.table3, esri.table4];
         const queryPromises = tables.map((table) => {
-          let query = table.createQuery()
-          query.where = field + ' = ' + unit[0]
+          let query = table.createQuery();
+          query.where = field + ' = ' + unit[0];
           return table.queryFeatures(query).then((result) => {
             if (result) {
               result.features.forEach((feat) => {
@@ -886,49 +950,49 @@ export default {
                   nitrReducPercent: 0,
                   phosReducPercent: 0,
                   sedReducPercent: 0,
-                  bmps: []
-                }
+                  bmps: [],
+                };
                 if (field === 'LARU') {
-                  this.resourceUnits.push(i)
+                  this.resourceUnits.push(i);
                 }
                 if (field === 'HUC_12') {
-                  this.hucUnits.push(i)
+                  this.hucUnits.push(i);
                 }
                 if (field === 'Catchment_ID') {
-                  this.catchUnits.push(i)
+                  this.catchUnits.push(i);
                 }
                 if (field === 'fid') {
-                  this.fieldUnits.push(i)
+                  this.fieldUnits.push(i);
                 }
-              })
-              count++
+              });
+              count++;
               if (count === 4) {
-                resolve(true)
+                resolve(true);
               }
             } else {
-              reject(new Error('Query failed'))
+              reject(new Error('Query failed'));
             }
-          })
-        })
+          });
+        });
         Promise.all(queryPromises)
           .then(() => resolve(true))
-          .catch(reject)
-      })
+          .catch(reject);
+      });
     },
     updateSupportingVisibility() {
       // turn off all raster layer visibility
       esri.map.layers.items.forEach((fl) => {
         if (fl.type === 'feature') {
-          fl.visible = false
+          fl.visible = false;
         }
         if (fl.type == 'map-image') {
           fl.allSublayers.items.forEach((sl) => {
             if (sl.layer.type == 'map-image') {
-              sl.visible = false
+              sl.visible = false;
             }
-          })
+          });
         }
-      })
+      });
       // turn on all sublayers that are checked in the TOC
       this.supportingMapVisibleLayers.forEach((l) => {
         //if type is raster layer - find the sublayer and make visible
@@ -937,13 +1001,14 @@ export default {
             return (
               layer.type == 'map-image' &&
               layer.url ==
-                this.$store.state.config.supportingMapLayers[l.mapServiceIndex].mapService
-            )
-          })
+                this.$store.state.config.supportingMapLayers[l.mapServiceIndex]
+                  .mapService
+            );
+          });
           let sublayer = layer.allSublayers.items.find((sublayer) => {
-            return sublayer.id == l.id
-          })
-          sublayer.visible = true
+            return sublayer.id == l.id;
+          });
+          sublayer.visible = true;
         }
         if (l.type === 'Feature Layer') {
           //check to see if feature layer exists.  if it does make it visible, if not create it.
@@ -951,66 +1016,76 @@ export default {
             (layer) =>
               layer.layerId == l.id &&
               layer.url ==
-                this.$store.state.config.supportingMapLayers[l.mapServiceIndex].mapService
-          )
+                this.$store.state.config.supportingMapLayers[l.mapServiceIndex]
+                  .mapService,
+          );
 
           if (i >= 0) {
-            esri.map.layers.items[i].visible = true
+            esri.map.layers.items[i].visible = true;
           } else {
             //check to see if fl has a popup template defined
             let layerList =
-              this.$store.state.config.supportingMapLayers[l.mapServiceIndex].popupTemplate
-            let i = layerList.findIndex((layer) => layer.id == l.id)
+              this.$store.state.config.supportingMapLayers[l.mapServiceIndex]
+                .popupTemplate;
+            let i = layerList.findIndex((layer) => layer.id == l.id);
             if (i >= 0) {
               let template = {
                 title: layerList[i].title,
                 content: [
                   {
                     type: 'text',
-                    text: layerList[i].label + ':  <b>{ ' + layerList[i].field + '}</b>'
-                  }
-                ]
-              }
+                    text:
+                      layerList[i].label +
+                      ':  <b>{ ' +
+                      layerList[i].field +
+                      '}</b>',
+                  },
+                ],
+              };
               //get index of map server
               esri.map.add(
                 new FeatureLayer({
                   url:
-                    this.$store.state.config.supportingMapLayers[l.mapServiceIndex].mapService +
+                    this.$store.state.config.supportingMapLayers[
+                      l.mapServiceIndex
+                    ].mapService +
                     '/' +
                     l.id,
-                  popupTemplate: template
-                })
-              )
+                  popupTemplate: template,
+                }),
+              );
             }
             //if no popup defined create the feature layer without popup
             else {
               esri.map.add(
                 new FeatureLayer({
                   url:
-                    this.$store.state.config.supportingMapLayers[l.mapServiceIndex].mapService +
+                    this.$store.state.config.supportingMapLayers[
+                      l.mapServiceIndex
+                    ].mapService +
                     '/' +
-                    l.id
-                })
-              )
+                    l.id,
+                }),
+              );
             }
           }
         }
-      })
+      });
     },
     consolidateInitLoads() {
-      let loopArray = []
+      let loopArray = [];
       if (this.layerSelection === 'NRCS Resource Units') {
-        loopArray = Array.from(this.resourceUnits)
+        loopArray = Array.from(this.resourceUnits);
       } else if (this.layerSelection === '12-Digit Hydrologic Units') {
-        loopArray = Array.from(this.hucUnits)
+        loopArray = Array.from(this.hucUnits);
       } else if (this.layerSelection === 'Catchments') {
-        loopArray = Array.from(this.catchUnits)
+        loopArray = Array.from(this.catchUnits);
       } else if (this.layerSelection === 'Field Boundaries') {
-        loopArray = Array.from(this.fieldUnits)
+        loopArray = Array.from(this.fieldUnits);
       }
-      let groupedObjects = []
+      let groupedObjects = [];
       loopArray.forEach((obj) => {
-        const label = obj.label
+        const label = obj.label;
         if (!groupedObjects[label]) {
           groupedObjects[label] = {
             label,
@@ -1026,37 +1101,41 @@ export default {
             sedReducPercent: 0,
             cropRows: [],
             bmps: [],
-            bmpLength: 0
-          }
+            bmpLength: 0,
+          };
         }
         if (groupedObjects[label]) {
-          groupedObjects[label]['cropRows'].push(obj)
-          groupedObjects[label].nitr += obj.nitr
-          groupedObjects[label].phos += obj.phos
-          groupedObjects[label].sed += obj.sed
-          groupedObjects[label].acres += obj.cAcres
-          groupedObjects[label].kFact = obj.k_factor
-          groupedObjects[label].clsFactor = obj.cls_factor
-          groupedObjects[label].runoff_year = obj.runoff_in_yr
+          groupedObjects[label]['cropRows'].push(obj);
+          groupedObjects[label].nitr += obj.nitr;
+          groupedObjects[label].phos += obj.phos;
+          groupedObjects[label].sed += obj.sed;
+          groupedObjects[label].acres += obj.cAcres;
+          groupedObjects[label].kFact = obj.k_factor;
+          groupedObjects[label].clsFactor = obj.cls_factor;
+          groupedObjects[label].runoff_year = obj.runoff_in_yr;
         }
-      })
-      this.initLoadData = Object.values(groupedObjects)
-      this.initLoadData = this.initLoadData.sort(({ acres: a }, { acres: b }) => b - a)
+      });
+      this.initLoadData = Object.values(groupedObjects);
+      this.initLoadData = this.initLoadData.sort(
+        ({ acres: a }, { acres: b }) => b - a,
+      );
     },
     updateSupportingOpacity() {
-      let l = this.supportingVisibleLayerOpacity
+      let l = this.supportingVisibleLayerOpacity;
       // if it is a raster find the sublayer and set the opacity
       if (l.type === 'Raster Layer') {
         let layer = esri.map.layers.items.find((layer) => {
           return (
             layer.type == 'map-image' &&
-            layer.url == this.$store.state.config.supportingMapLayers[l.mapServiceIndex].mapService
-          )
-        })
+            layer.url ==
+              this.$store.state.config.supportingMapLayers[l.mapServiceIndex]
+                .mapService
+          );
+        });
         let sublayer = layer.allSublayers.items.find((sublayer) => {
-          return sublayer.id == l.id
-        })
-        sublayer.opacity = l.value
+          return sublayer.id == l.id;
+        });
+        sublayer.opacity = l.value;
       }
       //if it is a feature layers, create it if it does not exist but make visibility false.  then set its opacity so that
       //when the user turns it on, it will find the layer and match the ui opacity dial.
@@ -1064,96 +1143,109 @@ export default {
         let i = esri.map.layers.items.findIndex(
           (layer) =>
             layer.layerId == l.id &&
-            layer.url == this.$store.state.config.supportingMapLayers[l.mapServiceIndex].mapService
-        )
+            layer.url ==
+              this.$store.state.config.supportingMapLayers[l.mapServiceIndex]
+                .mapService,
+        );
 
         if (i >= 0) {
-          esri.map.layers.items[i].opacity = l.value
+          esri.map.layers.items[i].opacity = l.value;
         } else {
           //check to see if fl has a popup template defined
           let layerList =
-            this.$store.state.config.supportingMapLayers[l.mapServiceIndex].popupTemplate
-          let i = layerList.findIndex((layer) => layer.id == l.id)
+            this.$store.state.config.supportingMapLayers[l.mapServiceIndex]
+              .popupTemplate;
+          let i = layerList.findIndex((layer) => layer.id == l.id);
           if (i >= 0) {
             let template = {
               title: layerList[i].title,
               content: [
                 {
                   type: 'text',
-                  text: layerList[i].label + ':  <b>{ ' + layerList[i].field + '}</b>'
-                }
-              ]
-            }
+                  text:
+                    layerList[i].label +
+                    ':  <b>{ ' +
+                    layerList[i].field +
+                    '}</b>',
+                },
+              ],
+            };
             //get index of map server
             esri.map.add(
               new FeatureLayer({
                 url:
-                  this.$store.state.config.supportingMapLayers[l.mapServiceIndex].mapService +
+                  this.$store.state.config.supportingMapLayers[
+                    l.mapServiceIndex
+                  ].mapService +
                   '/' +
                   l.id,
                 popupTemplate: template,
                 visible: false,
-                opacity: l.value
-              })
-            )
+                opacity: l.value,
+              }),
+            );
           }
           //if no popup defined create the feature layer without popup
           else {
             esri.map.add(
               new FeatureLayer({
                 url:
-                  this.$store.state.config.supportingMapLayers[l.mapServiceIndex].mapService +
+                  this.$store.state.config.supportingMapLayers[
+                    l.mapServiceIndex
+                  ].mapService +
                   '/' +
                   l.id,
                 visible: false,
-                opacity: l.value
-              })
-            )
+                opacity: l.value,
+              }),
+            );
           }
         }
       }
     },
     getMapPrint() {
-      esri.mapView.takeScreenshot({ width: 500, height: 400 }).then((screenshot) => {
-        let image = screenshot.dataUrl
-        this.$store.commit('updateMapPrintURI', image)
-      })
+      esri.mapView
+        .takeScreenshot({ width: 500, height: 400 })
+        .then((screenshot) => {
+          let image = screenshot.dataUrl;
+          this.$store.commit('updateMapPrintURI', image);
+        });
     },
 
     activateAreaMeasurement() {
-      const distanceButton = document.getElementById('distance')
-      const areaButton = document.getElementById('area')
-      esri.measurement.activeTool = 'area'
-      distanceButton.classList.remove('active')
-      areaButton.classList.add('active')
+      const distanceButton = document.getElementById('distance');
+      const areaButton = document.getElementById('area');
+      esri.measurement.activeTool = 'area';
+      distanceButton.classList.remove('active');
+      areaButton.classList.add('active');
     },
 
     activateLineMeasurement() {
-      const distanceButton = document.getElementById('distance')
-      const areaButton = document.getElementById('area')
-      esri.measurement.activeTool = 'distance'
-      distanceButton.classList.add('active')
-      areaButton.classList.remove('active')
+      const distanceButton = document.getElementById('distance');
+      const areaButton = document.getElementById('area');
+      esri.measurement.activeTool = 'distance';
+      distanceButton.classList.add('active');
+      areaButton.classList.remove('active');
     },
 
     // Clears all measurements
     clearMeasurements() {
-      const distanceButton = document.getElementById('distance')
-      const areaButton = document.getElementById('area')
-      distanceButton.classList.remove('active')
-      areaButton.classList.remove('active')
-      esri.measurement.clear()
+      const distanceButton = document.getElementById('distance');
+      const areaButton = document.getElementById('area');
+      distanceButton.classList.remove('active');
+      areaButton.classList.remove('active');
+      esri.measurement.clear();
     },
     hideWidgets() {
-      esri.lgExpand.visible = false
-      esri.scaleBar.visible = false
+      esri.lgExpand.visible = false;
+      esri.scaleBar.visible = false;
     },
     showWidgets() {
-      esri.lgExpand.visible = true
-      esri.scaleBar.visible = true
-    }
-  }
-}
+      esri.lgExpand.visible = true;
+      esri.scaleBar.visible = true;
+    },
+  },
+};
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
